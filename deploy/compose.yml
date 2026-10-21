@@ -1,0 +1,35 @@
+name: melon
+services:
+  app:
+    image: ${MELON_IMAGE:?Set MELON_IMAGE}
+    restart: unless-stopped
+    init: true
+    environment:
+      MELON_DATA_DIR: /data
+      MELON_PUBLIC_ORIGIN: https://114.215.182.66
+      NEXT_PUBLIC_BASE_PATH: /melon
+    volumes:
+      - /opt/melon/data:/data
+    ports:
+      - "127.0.0.1:3100:3000"
+    networks:
+      web:
+        aliases: [melon-app]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/melon/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+networks:
+  web:
+    external: true
+    name: moye_default
