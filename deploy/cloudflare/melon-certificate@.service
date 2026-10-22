@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew Melon certificate for %i
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/melon/cloudflare/certificate.sh renew %i

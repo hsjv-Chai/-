@@ -1,5 +1,7 @@
 # ECS 部署
 
+Cloudflare 免费代理接入准备及分阶段操作见 [Cloudflare 接入包](cloudflare/README.md)。当前尚未购买域名，生产仍使用原 IP 入口。
+
 本项目同时保留原 Vinext/Worker 本地运行方式，并提供 Next.js standalone / Node 24 的 ECS 生产方式。生产使用 `node:sqlite`（WAL、外键、5 秒 busy timeout）与磁盘图片目录。事务适配层保证帖子与图片关联批量写入原子性。
 
 ## 当前布局

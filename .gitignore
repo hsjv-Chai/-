@@ -46,3 +46,7 @@ yarn-error.log*
 
 # ECS development data and credentials
 /.melon-data/
+
+# Python deployment tooling caches
+__pycache__/
+*.pyc
