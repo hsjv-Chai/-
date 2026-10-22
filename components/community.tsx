@@ -14,6 +14,7 @@ function Link(props: AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <a {...props} href={props.href?appPath(props.href):undefined} />;
 }
 import {
+  Spade,
   Search,
   Plus,
   ArrowUpRight,
@@ -46,6 +47,7 @@ import {
   Users,
 } from "lucide-react";
 import Markdown from "./markdown";
+import CardRoom from "./card-room";
 import {appPath, stripBasePath} from "@/lib/paths";
 type User = {
   id: string;
@@ -249,6 +251,7 @@ function App() {
   const category = params.get("category") || "",
     view = params.get("view") || "latest",
     isHome = pathname === "/",
+    isGames = pathname === "/games" || pathname.startsWith("/games/"),
     selectedCategory = categories.data?.find((c) => c.id === category);
   const slug = pathname.split("/").filter(Boolean);
   async function logout() {
@@ -276,6 +279,7 @@ function App() {
             </span>
           </Link>
           <nav className="top-nav" aria-label="主导航">
+            <Link className={isGames ? "active" : ""} href="/games">牌室</Link>
             <Link
               className={isHome && view === "latest" ? "active" : ""}
               href="/"
@@ -352,7 +356,7 @@ function App() {
           </div>
         </div>
       </header>
-      <div className="shell">
+      <div className={"shell" + (isGames ? " games-shell" : "")}>
         <aside className={"left-sidebar " + (mobileMenu ? "mobile-open" : "")}>
           <div className="sidebar-label">一起逛逛</div>
           <Link
@@ -382,6 +386,7 @@ function App() {
             );
           })}
           <div className="sidebar-divider" />
+          <Link className={"side-link " + (isGames ? "selected" : "")} href="/games"><Spade size={18}/><span>牌室</span><span className="side-count">NEW</span></Link>
           <Link className="side-link" href="/?view=featured">
             <Sparkles size={18} />
             编辑精选
@@ -426,7 +431,7 @@ function App() {
           </div>
         </aside>
         <main className="main">
-          {isHome ? (
+          {isGames ? (<CardRoom key={pathname} roomId={slug[1]} user={user} ready={authReady} login={askLogin}/>) : isHome ? (
             <>
               <section className="hero">
                 <div className="hero-copy">
@@ -539,7 +544,7 @@ function App() {
             </Empty>
           )}
         </main>
-        <aside className="right-sidebar">
+        <aside className={"right-sidebar" + (isGames ? " games-hide" : "")}>
           <section className="side-panel hot-panel">
             <div className="panel-heading">
               <h2>
@@ -613,7 +618,7 @@ function App() {
         </aside>
       </div>
       <button
-        className="button mobile-compose"
+        className={"button mobile-compose" + (isGames ? " games-hide" : "")}
         onClick={() => needUser(() => navigate("/new"))}
       >
         <Plus size={18} />

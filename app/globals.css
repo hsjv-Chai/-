@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./games.css";
 :root {
   --bg: #f7f8f4;
   --paper: #fff;

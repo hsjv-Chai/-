@@ -42,3 +42,11 @@ sudo sh /opt/melon/backup-ecs.sh
 5. 首次部署若需移除入口，从 Nginx 配置移除 `BEGIN melon-community` 到 `END melon-community` 区块；先 `nginx -t`，再平滑 reload。不要直接覆盖其他应用的后续配置更新。
 
 官方参考：[Next.js 自托管](https://nextjs.org/docs/app/guides/self-hosting)、[Docker 的 Next.js 指南](https://docs.docker.com/guides/nextjs/)、[Node.js SQLite](https://nodejs.org/download/release/latest-v24.x/docs/api/sqlite.html)。
+
+## 牌室版本
+
+当前论坛镜像为 `melon-community:20261022-cards-v1`，源代码位于 `/opt/melon/releases/20261022-cards-v1`，入口 `https://114.215.182.66/melon/games`。迁移只增加 `game_rooms` 表；旧 BBS 表未改动。
+
+`update-image.sh` 用于切换已在隔离数据上验收过、迁移向后兼容的镜像；以 root 运行，参数为 `melon-community:<版本>`。它备份整个数据目录及原 `.env`（不输出内容），修改镜像变量、仅重建论坛容器，健康检查失败则自动恢复原镜像配置。此次旧版为 `melon-community:20261022-v1`；若需回退，可用同一脚本切换旧镜像，保留新增表，不恢复旧数据库覆盖新内容。
+
+打包构建源码时需包含 `.openai/hosting.json`（只有本地 DB/BUCKET 绑定名称，供 Vite 配置类型检查使用），排除环境文件、用户数据、输出目录及密钥。

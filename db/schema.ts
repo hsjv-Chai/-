@@ -90,3 +90,13 @@ export const authAttempts = sqliteTable("auth_attempts", {
   count: integer("count").notNull(),
   expires: integer("expires").notNull(),
 });
+export const gameRooms = sqliteTable('game_rooms', {
+  id: text('id').primaryKey(),
+  ownerId: text('owner_id').notNull().references(() => users.id),
+  game: text('game').notNull(),
+  phase: text('phase').notNull(),
+  state: text('state').notNull(),
+  version: integer('version').notNull().default(0),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, t => [index('game_rooms_updated_idx').on(t.updatedAt), index('game_rooms_owner_idx').on(t.ownerId, t.createdAt)]);

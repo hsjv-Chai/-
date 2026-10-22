@@ -8,6 +8,8 @@
 
 管理员用户名为 `melon_admin`，随机初始密码通过本机 `outputs/melon-server-admin.txt` 私密文件交付。ECS 使用 Node 24、Next.js standalone、SQLite 和磁盘图片存储，数据位于 `/opt/melon/data`。部署、重启、备份及更新步骤见 [ECS 维护说明](deploy/README.md)。本地与服务器数据各自独立。
 
+Cloudflare 接入工具已准备，详见 [接入包与验收步骤](deploy/cloudflare/README.md)。当前尚未购买域名，因此还未开启 Cloudflare 代理，线上继续使用上述 IP 地址。
+
 ## 启动
 
 要求 Node.js 22.13+（本次使用 24），首次安装需要联网下载依赖。
@@ -64,3 +66,7 @@ npm run test:integration
 ## 实现说明
 
 页面间使用标准站内链接和整页导航；点赞、回复及管理操作仍异步更新。此选择避开当前 Vinext beta 模板在正式构建中出现的 RSC 预取兼容问题，已在构建预览验证。数据库、API 和用户会话不依赖该预取机制。
+
+## 牌室
+
+导航新增“牌室”：真人斗地主与完整升级掼蛋，支持邀请朋友、准备开局、贡还牌、断线重进和超时处理。详见 [牌室使用与规则说明](CARD_ROOM.md)。新增迁移仅增加房间表；ECS 启动自动迁移，本地 Worker 模式运行 `npm run db:migrate`。

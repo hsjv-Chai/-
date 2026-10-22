@@ -20,7 +20,8 @@
     "build:ecs": "next build --webpack",
     "start:ecs": "next start",
     "init:ecs": "node scripts/init-ecs.mjs",
-    "test:ecs": "MELON_STORAGE=node node scripts/test-integration.mjs"
+    "test:ecs": "MELON_STORAGE=node node scripts/test-integration.mjs",
+    "test:games": "node --experimental-strip-types --test scripts/test-games.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
