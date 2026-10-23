@@ -42,6 +42,7 @@
     "**/*.mts"
   ],
   "exclude": [
+    "beta",
     "node_modules",
     "examples",
     "dist",
