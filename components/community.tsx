@@ -15,6 +15,7 @@ function Link(props: AnchorHTMLAttributes<HTMLAnchorElement>) {
 }
 import {
   Spade,
+  Sprout,
   Search,
   Plus,
   ArrowUpRight,
@@ -48,6 +49,7 @@ import {
 } from "lucide-react";
 import Markdown from "./markdown";
 import CardRoom from "./card-room";
+import Garden from "./garden";
 import {appPath, stripBasePath} from "@/lib/paths";
 type User = {
   id: string;
@@ -251,6 +253,7 @@ function App() {
   const category = params.get("category") || "",
     view = params.get("view") || "latest",
     isHome = pathname === "/",
+    isGarden = pathname === "/garden" || pathname === "/garden/",
     isGames = pathname === "/games" || pathname.startsWith("/games/"),
     selectedCategory = categories.data?.find((c) => c.id === category);
   const slug = pathname.split("/").filter(Boolean);
@@ -280,6 +283,7 @@ function App() {
           </Link>
           <nav className="top-nav" aria-label="主导航">
             <Link className={isGames ? "active" : ""} href="/games">牌室</Link>
+            <Link className={isGarden ? "active" : ""} href="/garden/">种瓜</Link>
             <Link
               className={isHome && view === "latest" ? "active" : ""}
               href="/"
@@ -387,6 +391,7 @@ function App() {
           })}
           <div className="sidebar-divider" />
           <Link className={"side-link " + (isGames ? "selected" : "")} href="/games"><Spade size={18}/><span>牌室</span><span className="side-count">NEW</span></Link>
+          <Link className={"side-link " + (isGarden ? "selected" : "")} href="/garden/"><Sprout size={18}/><span>种瓜</span><span className="side-count">每日</span></Link>
           <Link className="side-link" href="/?view=featured">
             <Sparkles size={18} />
             编辑精选
@@ -431,7 +436,7 @@ function App() {
           </div>
         </aside>
         <main className="main">
-          {isGames ? (<CardRoom key={pathname} roomId={slug[1]} user={user} ready={authReady} login={askLogin}/>) : isHome ? (
+          {isGarden ? <Garden key={user?.id ?? "guest"} user={user} ready={authReady} login={askLogin}/> : isGames ? (<CardRoom key={pathname} roomId={slug[1]} user={user} ready={authReady} login={askLogin}/>) : isHome ? (
             <>
               <section className="hero">
                 <div className="hero-copy">
@@ -482,6 +487,7 @@ function App() {
                   <span className="art-label">100% 新鲜讨论</span>
                 </div>
               </section>
+              <Garden key={user?.id ?? "guest"} user={user} ready={authReady} login={askLogin} compact/>
               <div className="welcome-strip">
                 <span>
                   <span className="live-dot" /> 让好奇心在这里碰头

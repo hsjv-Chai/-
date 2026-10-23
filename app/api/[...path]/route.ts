@@ -1,3 +1,4 @@
+import {gardenAPI} from "@/lib/garden/api";
 import {gamesAPI} from "@/lib/games/api";
 import {stripBasePath} from "@/lib/paths";
 import { env } from "@/lib/storage-runtime";
@@ -31,6 +32,7 @@ async function handler(req: Request): Promise<Response> {
       [resource, key, action] = parts,
       method = req.method;
     if (method !== "GET") sameOrigin(req);
+    if(resource === "garden") return await gardenAPI(req,parts.slice(1));
     if(resource === "games") return await gamesAPI(req,key);
     if(resource === "health" && method === "GET") {await one("SELECT 1 AS ok");return json({ok:true});}
     if (resource === "auth") {

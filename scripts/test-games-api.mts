@@ -38,12 +38,16 @@ try {
     const sorted=sortCards(r.hand,game,r.level).reverse();
     const c=sorted.find(c=>!r.last||weight(c.rank,game,r.level)>r.last.pattern.rank);
     r=await api('games/'+rid,'POST',{type:c?'play':'pass',cards:c?[c.id]:undefined,version:r.version},client);
-    assert.ok(!('hands'in r));checks++;
+    assert.ok(!('hands'in r));if(r.phase==='playing')assert.deepEqual(r.revealedHands,[]);checks++;
   }
   assert.ok(count<800);assert.ok(['finished','roundEnd'].includes(r.phase));checks+=2;
+  const revealed=await api('games/'+rid,'GET',undefined,clients[4]);
+  const stored=JSON.parse((db.prepare('SELECT state FROM game_rooms WHERE id=?').get(rid) as {state:string}).state);
+  assert.deepEqual(revealed.revealedHands.map((h:any)=>h.seat),stored.hands.flatMap((h:any[],i:number)=>h.length?[i]:[]));
+  for(const h of revealed.revealedHands)assert.deepEqual(h.cards.map((c:any)=>c.id).sort(),stored.hands[h.seat].map((c:any)=>c.id).sort());checks++;
   if(game==='guandan'){
     for(let i=0;i<n;i++)r=await api('games/'+rid,'POST',{type:'ready',version:r.version},clients[i]);
-    assert.equal(r.round,2);checks++;
+    assert.equal(r.round,2);assert.deepEqual(r.revealedHands,[]);checks++;
     while(r.phase==='tribute'||r.phase==='return'){const c=whose();r=await api('games/'+rid,'GET',undefined,c);r=await api('games/'+rid,'POST',{type:'exchange',cards:[r.exchangeAllowed[0]],version:r.version},c);}
     assert.equal(r.phase,'playing');checks++;
   }

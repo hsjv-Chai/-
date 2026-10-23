@@ -45,8 +45,16 @@ sudo sh /opt/melon/backup-ecs.sh
 
 ## 牌室版本
 
-当前论坛镜像为 `melon-community:20261022-cards-v1`，源代码位于 `/opt/melon/releases/20261022-cards-v1`，入口 `https://114.215.182.66/melon/games`。迁移只增加 `game_rooms` 表；旧 BBS 表未改动。
+牌室亮牌版本镜像为 `melon-community:20261023-reveal-v1`，源代码位于 `/opt/melon/releases/20261023-reveal-v1`，入口 `https://114.215.182.66/melon/games`。迁移只增加 `game_rooms` 表；旧 BBS 表未改动。
 
-`update-image.sh` 用于切换已在隔离数据上验收过、迁移向后兼容的镜像；以 root 运行，参数为 `melon-community:<版本>`。它备份整个数据目录及原 `.env`（不输出内容），修改镜像变量、仅重建论坛容器，健康检查失败则自动恢复原镜像配置。此次旧版为 `melon-community:20261022-v1`；若需回退，可用同一脚本切换旧镜像，保留新增表，不恢复旧数据库覆盖新内容。
+`update-image.sh` 用于切换已在隔离数据上验收过、迁移向后兼容的镜像；以 root 运行，参数为 `melon-community:<版本>`。它备份整个数据目录及原 `.env`（不输出内容），修改镜像变量、仅重建论坛容器，健康检查失败则自动恢复原镜像配置。上一个版本为 `melon-community:20261022-cards-v1`；若需回退，可用同一脚本切换旧镜像，保留新增表，不恢复旧数据库覆盖新内容。
 
 打包构建源码时需包含 `.openai/hosting.json`（只有本地 DB/BUCKET 绑定名称，供 Vite 配置类型检查使用），排除环境文件、用户数据、输出目录及密钥。
+
+## 种瓜版本（当前）
+
+当前镜像 `melon-community:20261023-garden-v1`，源代码 `/opt/melon/releases/20261023-garden-v1`，入口 `https://114.215.182.66/melon/garden/`。迁移 `0002_narrow_blob` 仅新增 `garden_check_ins`；没有修改牌室规则或运行牌室测试。
+
+2026-10-23 14:22（北京时间）发布，镜像 SHA256 `37de5a1efac9aadbe699125b46ec698d30b5e7740ac9935e83ad1eadfc465e5b`。发布前检查无进行中牌局。数据备份 `/opt/melon/backups/melon-data-20261023T062222Z.tar.gz`；旧镜像配置 `/opt/melon/backups/env-before-20261023T062222Z`。
+
+回退命令：`sudo sh /opt/melon/update-image.sh melon-community:20261023-reveal-v1`。回退也应避开进行中的牌局。新增签到表可保留，不要用旧数据库覆盖上线后用户内容。玩法与接口测试见 `GARDEN.md`；代理限制及验收边界见 `VERIFICATION.md`。

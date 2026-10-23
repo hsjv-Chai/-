@@ -100,3 +100,9 @@ export const gameRooms = sqliteTable('game_rooms', {
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 }, t => [index('game_rooms_updated_idx').on(t.updatedAt), index('game_rooms_owner_idx').on(t.ownerId, t.createdAt)]);
+
+export const gardenCheckIns = sqliteTable('garden_check_ins', {
+  userId: text('user_id').notNull().references(() => users.id),
+  day: text('day').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, t => [primaryKey({ columns: [t.userId, t.day] })]);

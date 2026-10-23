@@ -23,7 +23,7 @@ function Rules(){return <details className="game-rules"><summary>怎么玩 · �
   <h3>掼蛋 · 4 人，隔座为队友</h3><p>两副牌，每人 27 张。一、三号座一队，二、四号座一队；双方从 2 打起，头二升 3 级、头三升 2 级、头末升 1 级，最多升到 A。打本方 A 时取得头二或头三即赢得整场；未过 A 保留级别，不采用三次掉级。</p>
   <p>红心级牌可配任意非王牌；选牌后可选择牌型声明。顺子固定 5 张、三连对固定 6 张、钢板固定两组三张。A 可作顺子、连对、钢板中的最小点数。四王 ＞ 六张及以上炸弹 ＞ 同花顺 ＞ 五炸 ＞ 四炸。领出者出完后无人再压，由队友接风。</p>
   <p>下一副：末游向头游进贡；双下时两人都进贡，大贡给头游，同点贡随机对应。贡牌为红心级牌外最大牌，按收贡对象还一张 ≤10 的非级牌，没有则还最小牌。单贡方有两大王，或双贡方合计两大王时抗贡，头游先出；否则大贡方先出。</p>
-  <h3>房间与操作</h3><p>全部玩家准备后自动开局，每次操作限时 60 秒。超时自动不叫、过牌；领出时出最小单张，贡还时选合法牌。至少一位玩家打开牌桌时自动推进；全员离线保留牌局，重进后恢复。刷新页面不会退出，点击“退出房间”会提前结束正在进行的本场。7 天未活动的房间失效。牌室只记录本场结果。</p>
+  <h3>房间与操作</h3><p>全部玩家准备后自动开局，每次操作限时 60 秒。超时自动不叫、过牌；领出时出最小单张，贡还时选合法牌。至少一位玩家打开牌桌时自动推进；全员离线保留牌局，重进后恢复。刷新页面不会退出，点击“退出房间”会提前结束正在进行的本场。7 天未活动的房间失效。正常结算后，全桌可见未出完的剩余手牌；下一副开始后恢复保密。牌室只记录本场结果。</p>
 </div></details>}
 export default function CardRoom({roomId,user,ready,login}:{roomId?:string;user:User|null;ready:boolean;login:()=>void}) {
   const [rooms,setRooms]=useState<Summary[]>([]),[room,setRoom]=useState<Room|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState<number[]>([]),[declaration,setDeclaration]=useState(''),[copied,setCopied]=useState(false),[clock,setClock]=useState(Date.now()),[offset,setOffset]=useState(0),[confirmLeave,setConfirmLeave]=useState(false);
@@ -81,6 +81,13 @@ export default function CardRoom({roomId,user,ready,login}:{roomId?:string;user:
         </div>
         {room.game==='doudizhu'&&room.bottom.length>0&&<div className="table-bottom"><span>底牌</span>{room.bottom.map(c=><CardFace key={c.id} card={c} small/>)}</div>}
       </div>
+      {(room.phase==='roundEnd'||room.phase==='finished')&&!!room.revealedHands?.length&&<section className="revealed-hands" aria-labelledby="reveal-heading">
+        <div className="reveal-heading"><h2 id="reveal-heading">本副剩余手牌</h2><p>本副已结束，未出完的手牌向全桌公开。</p></div>
+        {room.revealedHands.map(({seat,nickname,cards})=><div className="revealed-player" key={seat}>
+          <div className="revealed-player-label"><strong>{nickname}{seat===room.seat?'（你）':''}</strong><span>{seat+1} 号座 · 剩 {cards.length} 张</span></div>
+          <div className="revealed-cards" aria-label={`${nickname}剩余 ${cards.length} 张牌`}>{cards.map(c=><CardFace key={c.id} card={c} wild={room.game==='guandan'&&isWild(c,room.level)}/>)}</div>
+        </div>)}
+      </section>}
       {room.seat>=0&&<section className="my-hand"><div className="hand-heading"><strong>我的手牌 <span>{room.hand.length} 张</span></strong><span>{room.game==='guandan'?`♥${rankName(room.level)} 为逢人配`:'点击选牌，再点击可取消'}</span></div>
         {room.hand.length>0&&<div className="hand-cards">{room.hand.map(c=><div key={c.id} className={room.exchangeAllowed.includes(c.id)&&myTurn?'exchange-option':''}><CardFace card={c} wild={room.game==='guandan'&&isWild(c,room.level)} selected={selected.includes(c.id)} onClick={()=>{setSelected(prev=>prev.includes(c.id)?prev.filter(x=>x!==c.id):[...prev,c.id]);setDeclaration('');}} disabled={busy||!playing}/></div>)}</div>}
         <div className="hand-controls">

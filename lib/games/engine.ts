@@ -2,6 +2,7 @@ import {type Card,type GameKind,type Pattern,deck,randomInt,sortCards,patterns,b
 export type Seat = { id:string; nickname:string; ready:boolean };
 export type Phase = 'waiting'|'bidding'|'tribute'|'return'|'playing'|'roundEnd'|'finished'|'closed';
 export type Tribute = {from:number;to:number;card:Card|null;returned:Card|null};
+export type RevealedHand = {seat:number; nickname:string; cards:Card[]};
 export type GameState = {
   game:GameKind; host:string; seats:(Seat|null)[]; phase:Phase; hands:Card[][];
   turn:number; deadline:number; round:number; bottom:Card[]; landlord:number;
@@ -9,7 +10,7 @@ export type GameState = {
   last:{seat:number;cards:Card[];pattern:Pattern}|null; passes:number[];
   finish:number[]; previousFinish:number[]; levels:number[]; level:number; activeTeam:number;
   tributes:Tribute[]; leadAfterTribute:number; matchWinner:number|null;
-  result:string; log:string[];
+  result:string; log:string[]; revealedHands?:RevealedHand[];
 };
 export type GameAction = {type:string; cards?:unknown; pattern?:unknown; value?:unknown};
 export function check(condition:unknown,message:string):asserts condition { if(!condition) throw Object.assign(new Error(message),{status:400}); }
@@ -22,7 +23,17 @@ export function createState(game:GameKind,host:Seat):GameState {
 }
 function nextActive(s:GameState,seat:number) { for(let i=1;i<=s.seats.length;i++){const n=(seat+i)%s.seats.length;if(s.hands[n]?.length)return n;}return seat; }
 function resetDeadline(s:GameState,time:number){s.deadline=activePhase(s.phase)?time+60000:0;}
+function remainingHands(s:GameState):RevealedHand[] {
+  return s.hands.flatMap((hand,seat)=>hand.length?[{seat,nickname:name(s,seat),cards:sortCards(hand,s.game,s.level)}]:[]);
+}
+function completedHands(s:GameState):RevealedHand[] {
+  if(s.phase!=='roundEnd'&&s.phase!=='finished')return [];
+  if(s.revealedHands)return s.revealedHands;
+  // Existing completed rooms predate the snapshot field; interrupted rooms have no hands.
+  return s.hands.length===capacity(s.game)&&s.finish.length===(s.game==='doudizhu'?1:4)?remainingHands(s):[];
+}
 function finishRound(s:GameState) {
+  s.revealedHands=remainingHands(s);
   if(s.game==='doudizhu') {
     const win=s.finish[0]===s.landlord;
     s.phase='finished';s.matchWinner=win?s.landlord:-1;s.result=`${win?'地主':'农民'}获胜！`;
@@ -58,7 +69,7 @@ function setupTribute(s:GameState) {
 }
 export function dealRound(s:GameState,pile=deck(s.game)) {
   const n=capacity(s.game);
-  s.previousFinish=[...s.finish];s.finish=[];s.last=null;s.passes=[];s.result='';s.tributes=[];
+  s.revealedHands=[];s.previousFinish=[...s.finish];s.finish=[];s.last=null;s.passes=[];s.result='';s.tributes=[];
   s.round++;s.level=s.levels[s.activeTeam];s.hands=Array.from({length:n},()=>[]);
   const dealt=s.game==='doudizhu'?51:108;
   for(let i=0;i<dealt;i++)s.hands[i%n].push(pile[i]);
@@ -131,6 +142,7 @@ export function applyAction(input:GameState,user:{id:string;nickname:string},act
   }
   check(seat>=0,'你尚未加入这个房间');check(s.phase!=='closed','房间已关闭');
   if(action.type==='leave') {
+    s.revealedHands=completedHands(s);
     if(activePhase(s.phase)||s.phase==='roundEnd') {
       // An explicit departure ends the match, preventing a permanently occupied seat.
       s.phase='finished';s.result=`${user.nickname}退出，本场提前结束。`;s.matchWinner=null;s.deadline=0;
@@ -191,13 +203,13 @@ export function applyAction(input:GameState,user:{id:string;nickname:string},act
   } else check(false,'未知的牌室操作');
   resetDeadline(s,time);return s;
 }
-// Whitelist output fields. Never serialize the internal state or another player's hand.
+// Whitelist output fields. Other hands are public only after a completed round.
 export function publicState(s:GameState,userId:string) {
   const seat=s.seats.findIndex(p=>p?.id===userId);
   return {game:s.game,host:s.host,seats:s.seats.map((p,i)=>p?{...p,count:s.hands[i]?.length||0}:null),phase:s.phase,turn:s.turn,deadline:s.deadline,round:s.round,
     hand:seat>=0?sortCards(s.hands[seat]||[],s.game,s.level):[],seat,
     bottom:s.game==='doudizhu'&&s.landlord>=0&&s.phase!=='bidding'?s.bottom:[],landlord:s.landlord,bids:s.bids,highBid:s.highBid,
     last:s.last,passes:s.passes,finish:s.finish,levels:s.levels,level:s.level,activeTeam:s.activeTeam,matchWinner:s.matchWinner,result:s.result,
-    log:s.log,exchangeAllowed:seat===s.turn?allowedExchange(s,seat).map(c=>c.id):[]};
+    revealedHands:completedHands(s),log:s.log,exchangeAllowed:seat===s.turn?allowedExchange(s,seat).map(c=>c.id):[]};
 }
 export type PublicState=ReturnType<typeof publicState>;

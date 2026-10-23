@@ -70,3 +70,9 @@ npm run test:integration
 ## 牌室
 
 导航新增“牌室”：真人斗地主与完整升级掼蛋，支持邀请朋友、准备开局、贡还牌、断线重进和超时处理。详见 [牌室使用与规则说明](CARD_ROOM.md)。新增迁移仅增加房间表；ECS 启动自动迁移，本地 Worker 模式运行 `npm run db:migrate`。
+
+## 种瓜
+
+每日签到让瓜苗成长，累计七天自动收获一颗西瓜。漏签保留进度，收获记录仅本人可见。入口 `/melon/garden/`，首页和导航也可进入。沿用现有账户，无积分兑换或牌室奖励。
+
+迁移 `0002_narrow_blob` 只新增签到表；ECS 启动自动应用，本地 Worker 模式运行 `npm run db:migrate`。执行 `npm run test:garden` 检查成长与日期规则；隔离接口及真实重启测试步骤见 [种瓜说明](GARDEN.md)。

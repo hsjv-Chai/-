@@ -44,3 +44,34 @@ test('double tribute routes higher tribute to winner; anti tribute works in both
 test('public snapshots reveal only own cards, no future deal or hidden tribute',()=>{const s=begun('doudizhu');const mine=publicState(s,users[0].id);assert.equal(mine.hand.length,17);assert.ok(!('hands' in mine));assert.ok(!('tributes' in mine));assert.equal(publicState(s,'outsider').hand.length,0);assert.equal(mine.bottom.length,0);});
 test('timeouts require deadline and membership, reconnect snapshot, departure and rematch',()=>{let s=playState('doudizhu',[[3,4],[5],[6]]);assert.throws(()=>applyAction(s,users[1],{type:'tick'},999));assert.throws(()=>applyAction(s,{id:'outsider',nickname:'x'},{type:'tick'},1001));s=applyAction(s,users[1],{type:'tick'},1001);assert.equal(s.hands[0].length,1);assert.equal(s.turn,1);assert.equal(s.deadline,61001);assert.deepEqual(publicState(JSON.parse(JSON.stringify(s)),users[0].id),publicState(s,users[0].id));s=applyAction(s,users[1],{type:'leave'});assert.equal(s.phase,'finished');assert.equal(s.hands.length,0);assert.throws(()=>applyAction(s,users[2],{type:'rematch'}));s=applyAction(s,users[0],{type:'rematch'});assert.equal(s.phase,'waiting');assert.equal(s.round,0);});
 test('both games reach an end with legal timeout play, conserving physical cards',()=>{for(const game of ['doudizhu','guandan'] as const){let s=begun(game);let count=0;while(!['roundEnd','finished'].includes(s.phase)&&count++<1000){s=applyAction(s,users[0],{type:'tick'},s.deadline);assert.equal(new Set(s.hands.flat().map(c=>c.id)).size,s.hands.flat().length);}assert.ok(count<1000);assert.ok(s.result);}});
+test('completed Dou Dizhu reveals exactly the unfinished hands to players and spectators',()=>{
+ const initial=playState('doudizhu',[[3],[5,4],[6,6]]);
+ assert.deepEqual(publicState(initial,users[1].id).revealedHands,[]);
+ const end=play(initial,0,[0]);const shown=publicState(end,users[0].id).revealedHands;
+ assert.deepEqual(shown.map(h=>h.seat),[1,2]);assert.deepEqual(shown[0].cards.map(c=>c.rank),[5,4]);
+ assert.deepEqual(shown[1].cards.map(c=>c.id),end.hands[2].map(c=>c.id));
+ assert.deepEqual(publicState(end,'spectator').revealedHands,shown);
+ assert.deepEqual(publicState(JSON.parse(JSON.stringify(end)),users[2].id).revealedHands,shown);
+ const left=applyAction(end,users[1],{type:'leave'});assert.deepEqual(publicState(left,users[0].id).revealedHands,shown);
+ const fresh=applyAction(left,users[0],{type:'rematch'});assert.deepEqual(publicState(fresh,users[0].id).revealedHands,[]);
+ const legacy=structuredClone(end);delete legacy.revealedHands;assert.deepEqual(publicState(legacy,users[0].id).revealedHands,shown);
+});
+test('Guandan reveals on double-up, third finisher and match win; clears before next deal',()=>{
+ for(const finalA of [false,true]){
+  let s=playState('guandan',[[],[4,4],[5],[6,6]]);s.finish=[0];s.turn=2;
+  if(finalA){s.level=14;s.levels=[14,2];}
+  s=play(s,2,[0]);assert.equal(s.phase,finalA?'finished':'roundEnd');
+  const shown=publicState(s,users[0].id).revealedHands;assert.deepEqual(shown.map(h=>h.seat),[1,3]);
+  if(!finalA){const left=applyAction(s,users[1],{type:'leave'});assert.deepEqual(publicState(left,users[0].id).revealedHands,shown);
+   for(const u of users)s=applyAction(s,u,{type:'ready'});
+   assert.deepEqual(publicState(s,users[0].id).revealedHands,[]);assert.deepEqual(s.revealedHands,[]);
+  }
+ }
+ let third=playState('guandan',[[],[],[7],[8,9]]);third.finish=[0,1];third.turn=2;third=play(third,2,[0]);assert.deepEqual(publicState(third,'spectator').revealedHands.map(h=>h.seat),[3]);
+});
+test('no remaining-hand disclosure during play, tribute, bidding, or aborted games',()=>{
+ for(const game of ['guandan','doudizhu'] as const){const s=begun(game);assert.deepEqual(publicState(s,'spectator').revealedHands,[]);
+  const left=applyAction(s,users[1],{type:'leave'});assert.deepEqual(publicState(left,users[0].id).revealedHands,[]);
+  for(const phase of ['playing','bidding','tribute','return','waiting','closed'] as const){const stale=structuredClone(s);stale.phase=phase;stale.revealedHands=[{seat:1,nickname:'old',cards:s.hands[1]}];assert.deepEqual(publicState(stale,'spectator').revealedHands,[]);}
+ }
+});

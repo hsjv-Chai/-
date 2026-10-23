@@ -21,7 +21,9 @@
     "start:ecs": "next start",
     "init:ecs": "node scripts/init-ecs.mjs",
     "test:ecs": "MELON_STORAGE=node node scripts/test-integration.mjs",
-    "test:games": "node --experimental-strip-types --test scripts/test-games.mts"
+    "test:games": "node --experimental-strip-types --test scripts/test-games.mts",
+    "test:garden": "node --experimental-strip-types --test scripts/test-garden.mts",
+    "test:garden-api": "node --experimental-strip-types scripts/test-garden-api.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
