@@ -21,6 +21,7 @@
 - 每轮 60 秒。超时自动不叫或过牌；有领出权时出最小单张；贡还阶段选合法牌。
 - 至少一位参与者打开牌桌时，由其请求触发到期操作；服务器检查时间、身份和版本。所有人离线时不在后台继续对局，重新打开后从保存状态恢复。
 - 刷新、关页面不清除座位。显式“退出房间”会提前结束正在进行的整场，页面有确认提示。房主离开后由现存玩家接任。7 天未活动的房间不可再进入。
+- 一个账号同一时间只能在一个有效房间入座，斗地主与掼蛋共用此限制。等待、对局中及结束后尚未退出的房间都会保留座位；换桌前请点击“退出房间”。同时打开多个标签页也不能重复建房或跨房间入座。观战不占座，关闭或过期房间不再占用名额。
 - 当前为真人联机，无人机补位、聊天、观战手牌、积分经济或跨场排行榜。未入座用户只能看到公开牌面。
 
 ## 数据与一致性
@@ -30,6 +31,8 @@
 `GET /api/games` 为大厅，`POST /api/games` 建房，`GET /api/games/:id` 读取按账号裁剪的牌局，`POST /api/games/:id` 提交操作。写接口沿用来源检查与 HttpOnly 会话。房间写入使用 `WHERE version=?` 原子比较更新，避免重复出牌或两人抢占一个座位；冲突返回 409 并让客户端重新同步。所有响应 `Cache-Control: no-store`。洗牌使用服务端密码学随机数。对局中的响应字段白名单不包括其他人的手牌；仅正常结算后增加剩余手牌亮牌字段，叫地主结束前不公开底牌。
 
 每个账号每小时最多创建 10 个房间。大厅返回最近 60 个有效房间，用户仍可通过链接进入未过期的老房间。近期牌局记录最多保留 40 条。
+
+跨房间座位检查直接包含在建房 INSERT 和房间 UPDATE 的条件中，使用数据库原子写入保证并发一致性，不依赖大厅最近 60 条记录。重开及其他保留座位的操作也验证同桌玩家，历史重复入座的账号仍可退出多余房间。无需新增表或迁移。
 
 ## 验证与本地运行
 
@@ -47,7 +50,10 @@ MELON_DATA_DIR="$PWD/.sites-runtime/card-room-qa" MELON_PUBLIC_ORIGIN=http://127
 
 ```sh
 MELON_DATA_DIR="$PWD/.sites-runtime/card-room-qa" node --experimental-strip-types scripts/test-games-api.mts
+MELON_DATA_DIR="$PWD/.sites-runtime/card-room-qa" MELON_TEST_URL=http://127.0.0.1:5173/melon npm run test:single-room
 MELON_DATA_DIR="$PWD/.sites-runtime/card-room-qa" MELON_TEST_URL=http://127.0.0.1:5173/melon npm run test:ecs
 ```
 
 原 Vinext 本地模式继续使用 `npm run build`、`npm run db:migrate`、`npm run dev`；路径是 `/games`。ECS 每次启动自动运行新增迁移。回退旧镜像时保留新增表即可，不要删除已有数据库或恢复过时备份覆盖新帖子。
+
+`test:single-room` 使用隔离测试账户验证所有占座阶段、同时建房、同时加入不同房间、建房与加入竞争、同桌换座、退出换桌、关闭/过期房间，以及历史重复座位下的重开和退出。测试房间与账户在结束时清理。Windows PowerShell 请用 `$env:MELON_DATA_DIR` 和 `$env:MELON_TEST_URL` 设置上述环境变量。

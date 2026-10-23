@@ -55,6 +55,8 @@ try {
   const reconnect=await api('games/'+rid,'GET',undefined,clients[0]);assert.equal(reconnect.version,r.version);checks++;
   r=await api('games/'+rid,'POST',{type:'leave',version:r.version},clients[1]);
   r=await api('games/'+rid,'POST',{type:'rematch',version:r.version},clients[0]);assert.equal(r.phase,'waiting');checks++;
+  // Release all seats before this group moves to the other game type.
+  for(const client of clients)if(r.seats.some((p:any)=>p?.id===client.id))r=await api('games/'+rid,'POST',{type:'leave',version:r.version},client);
  }
  const listing=await api('games');assert.ok(listing.rooms.every((r:any)=>!('state'in r)&&!('hand'in r)&&!('hands'in r)));checks++;
  const invalid={cookie:clients[4].cookie+'invalid',id:''};await api('games','GET',undefined,invalid,401);

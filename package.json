@@ -22,6 +22,7 @@
     "init:ecs": "node scripts/init-ecs.mjs",
     "test:ecs": "MELON_STORAGE=node node scripts/test-integration.mjs",
     "test:games": "node --experimental-strip-types --test scripts/test-games.mts",
+    "test:single-room": "node --experimental-strip-types scripts/test-single-room-api.mts",
     "test:garden": "node --experimental-strip-types --test scripts/test-garden.mts",
     "test:garden-api": "node --experimental-strip-types scripts/test-garden-api.mts"
   },

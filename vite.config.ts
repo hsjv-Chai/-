@@ -45,7 +45,6 @@ export default defineConfig(async ({ command }) => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
-    resolve: {alias: {"@/lib/storage-runtime": fileURLToPath(new URL("./lib/storage-worker.ts", import.meta.url))}},
     server: {
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
@@ -56,6 +55,22 @@ export default defineConfig(async ({ command }) => {
     },
     plugins: [
       vinext(),
+      {
+        name: "melon-worker-storage",
+        enforce: "post",
+        // Vinext adds the broad @ alias. Put the Worker binding first after
+        // that configuration so local requests never use Node's filesystem.
+        config() {
+          return {
+            resolve: {
+              alias: [{
+                find: "@/lib/storage-runtime",
+                replacement: fileURLToPath(new URL("./lib/storage-worker.ts", import.meta.url)),
+              }],
+            },
+          };
+        },
+      },
       sites({ mockAuth: !managedLinux }),
       connectorPreview(),
       cloudflare({
