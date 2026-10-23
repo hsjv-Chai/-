@@ -51,10 +51,22 @@ sudo sh /opt/melon/backup-ecs.sh
 
 打包构建源码时需包含 `.openai/hosting.json`（只有本地 DB/BUCKET 绑定名称，供 Vite 配置类型检查使用），排除环境文件、用户数据、输出目录及密钥。
 
-## 种瓜版本（当前）
+## 种瓜版本
 
-当前镜像 `melon-community:20261023-garden-v1`，源代码 `/opt/melon/releases/20261023-garden-v1`，入口 `https://114.215.182.66/melon/garden/`。迁移 `0002_narrow_blob` 仅新增 `garden_check_ins`；没有修改牌室规则或运行牌室测试。
+种瓜首发镜像 `melon-community:20261023-garden-v1`，源代码 `/opt/melon/releases/20261023-garden-v1`，入口 `https://114.215.182.66/melon/garden/`。迁移 `0002_narrow_blob` 仅新增 `garden_check_ins`；没有修改牌室规则或运行牌室测试。
 
 2026-10-23 14:22（北京时间）发布，镜像 SHA256 `37de5a1efac9aadbe699125b46ec698d30b5e7740ac9935e83ad1eadfc465e5b`。发布前检查无进行中牌局。数据备份 `/opt/melon/backups/melon-data-20261023T062222Z.tar.gz`；旧镜像配置 `/opt/melon/backups/env-before-20261023T062222Z`。
 
 回退命令：`sudo sh /opt/melon/update-image.sh melon-community:20261023-reveal-v1`。回退也应避开进行中的牌局。新增签到表可保留，不要用旧数据库覆盖上线后用户内容。玩法与接口测试见 `GARDEN.md`；代理限制及验收边界见 `VERIFICATION.md`。
+
+## 单房间占座修复（当前）
+
+2026-10-23 16:43（北京时间）上线 `melon-community:20261023-single-room-a70bf46`。应用源码对应 GitHub main 的 `a70bf465523dca100da84f16e0ecb949bed8b722`（快进合入“千手观音bug修补”两个提交）；本节及验证记录为随后补充的发布文档，不改变运行代码。
+
+- 源码：`/opt/melon/releases/20261023-single-room-a70bf46`。
+- 镜像 SHA256：`108ddcd917d6ce503459b1a9a15c1ff7494d40942c50ec950a0177a32e3859d7`，镜像标签 `org.opencontainers.image.revision` 记录上述提交。
+- 数据备份：`/opt/melon/backups/melon-data-20261023T084331Z.tar.gz`；旧镜像配置：`/opt/melon/backups/env-before-20261023T084331Z`。
+- 无新增数据库迁移。发布前无进行中对局。已存在的历史重复座位需由参与者退出多余房间；修复保留退出操作，不自动清空房间。
+- 回退：确认无进行中对局后执行 `sudo sh /opt/melon/update-image.sh melon-community:20261023-garden-v1`。保留当前数据库，不用旧备份覆盖新用户内容；回退也会恢复旧版重复占座漏洞，仅用于紧急恢复。
+
+访问入口仍为 `https://114.215.182.66/melon/games`。本轮验收使用隔离容器接口及 ECS 本机 HTTPS 检查，未使用受全局代理影响的浏览器。
