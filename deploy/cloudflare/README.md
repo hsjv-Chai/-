@@ -1,15 +1,15 @@
 # 🍉 Cloudflare 接入包
 
-状态：**配置和验证工具已准备，未接通 Cloudflare。** 用户尚未购买域名；没有创建域名、DNS 记录或付费资源，没有切换服务器来源配置。当前生产入口仍是 `https://114.215.182.66/melon/`。
+本分支提供保留 `/melon` 前缀的 Cloudflare 接入工具。本文使用示例域名和通用路径，实际域名、服务器地址、账户、证书联系人及备案资料应保存在私密配置中。生产脚本拒绝示例域名；执行前须核对脚本中的环境绑定与所有参数，不能直接照搬到其他服务器。
 
 ## 前置输入与边界
 
 - 实际购买的域名，论坛固定使用其 `bbs` 子域名，路径保留 `/melon`。
-- 向阿里云确认杭州 ECS 上论坛业务的域名接入及备案条件。
+- 向阿里云确认ECS 上论坛业务的域名接入及备案条件。
 - 证书通知邮箱。签发脚本使用 Let's Encrypt/Certbot 标准 ACME 流程及服务条款。
 - 两个真实大陆网络，用于直连/代理对比。网络标签由测试人员填写，工具不会把同一台机器的两次运行当成两个真实网络的证明。
 
-保留现有应用镜像、SQLite、图片、Moye 和 SSH。使用 Cloudflare Free；不部署 Workers、D1、R2 或 Tunnel，不购买服务。域名变化需要重新登录，不迁移旧 IP 的 Cookie。
+保留现有应用镜像、SQLite、图片、既有网站和 SSH。使用 Cloudflare Free；不部署 Workers、D1、R2 或 Tunnel，不购买服务。域名变化需要重新登录，不迁移旧 IP 的 Cookie。
 
 本地需 Python 3、Node 24 和已授权的 `cf`；ECS 脚本兼容现有 Python 3.6、curl、Docker。当前 cf 0.15.0 的 `cf cli search` 尚不可用，接入脚本使用已由 `--help`、`cf schema` 和 `--dry-run` 验证的命令。
 
@@ -18,14 +18,14 @@
 - `render.py`：从当前 Nginx 配置生成 `acme`、`direct` 或 `proxied` 配置包，实时读取官方 IPv4/IPv6 来源网段。没有远端写操作。
 - `activate.py`：在 ECS 应用配置。先检查实际域名、24 小时有效期、来源网段、原文件哈希及证书，再备份并运行 `nginx -t`；失败自动恢复文件、Compose 和 Nginx。保留文件 inode，兼容现有单文件 bind mount。
 - `configure.py`：通过现有 `cf` OAuth 进行 DNS、TLS、缓存配置。默认只读与 dry-run，`--apply` 才会写；保存变更前快照，拒绝冲突 DNS、歧义规则及超出免费缓存规则数量。仅替换两个 `melon_*` 缓存规则，保留其他规则顺序。
-- `certificate.sh` 和 systemd 模板：签发、续期域名证书。与 Moye 的 IP 证书续期分别运行，不停 Nginx。
+- `certificate.sh` 和 systemd 模板：签发、续期域名证书。与既有网站的 IP 证书续期分别运行，不停 Nginx。
 - `verify.mjs`：公网冒烟检查、测速采样与两网络对比。不会打印密码；可通过本地私密凭据文件检查管理员登录，最后退出。
 
 生成的包包含 Nginx、DNS 和缓存规则 JSON、TLS 设置及哈希清单。`bbs.example.com` 只能用于示例，激活器明确拒绝它。运行文件放 `.sites-runtime/cloudflare/`，凭据和备份不提交 Git。
 
 ## 实施顺序（域名到位后）
 
-以下 `HOST`、`ZONE` 必须填写实际值。由执行接入的工程师操作，不要求站长手动执行这些命令。
+以下 `HOST`、`ZONE` 必须填写实际值；`NGINX_CONFIG` 为自己的 Nginx 配置路径，`ADMIN_CREDENTIAL_FILE` 为私密凭据文件路径。由维护者在私密运行环境中设置，不提交仓库。
 
 ### 1. 添加域名、准备源站证书
 
@@ -42,12 +42,12 @@ python3 deploy/cloudflare/configure.py --host "$HOST" --zone "$ZONE" --action dn
 
 ```sh
 cd /opt/melon/cloudflare
-sudo python3 render.py --host "$HOST" --mode acme --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-acme
+sudo python3 render.py --host "$HOST" --mode acme --base-nginx "$NGINX_CONFIG" --output /opt/melon/cloudflare-acme
 sudo python3 activate.py --bundle /opt/melon/cloudflare-acme
 sudo sh certificate.sh issue "$HOST" "$ACME_EMAIL"
 ```
 
-ACME 阶段仅增加该域名的 HTTP 验证入口，旧论坛入口保持原状。证书在现有证书卷 `/opt/moye/deploy/letsencrypt/live/<HOST>/` 中，与 IP 证书隔离。
+ACME 阶段仅增加该域名的 HTTP 验证入口，旧论坛入口保持原状。证书在现有证书卷 证书卷的 `live/<HOST>/` 目录 中，与 IP 证书隔离。
 
 安装续期任务：
 
@@ -64,7 +64,7 @@ sudo systemctl enable --now "melon-certificate@$HOST.timer"
 重新读取 Nginx 并生成 `direct` 包：
 
 ```sh
-sudo python3 render.py --host "$HOST" --mode direct --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-direct
+sudo python3 render.py --host "$HOST" --mode direct --base-nginx "$NGINX_CONFIG" --output /opt/melon/cloudflare-direct
 sudo python3 activate.py --bundle /opt/melon/cloudflare-direct
 ```
 
@@ -73,10 +73,10 @@ sudo python3 activate.py --bundle /opt/melon/cloudflare-direct
 在本机执行：
 
 ```sh
-node deploy/cloudflare/verify.mjs smoke --host "$HOST" --mode direct --credential-file outputs/melon-server-admin.txt
+node deploy/cloudflare/verify.mjs smoke --host "$HOST" --mode direct --credential-file "$ADMIN_CREDENTIAL_FILE"
 ```
 
-通过浏览器使用两个临时账户完整验证注册、图文发帖、回复、点赞、普通用户访问管理接口被拒绝、作者编辑权限，以及隐藏帖子后游客无法读取其图片。测试数据由实施人员记录并清理；不在生产执行会直接操纵本地数据库的旧 `test:integration` 脚本。记录 Moye 的原有响应作为对照。
+通过浏览器使用两个临时账户完整验证注册、图文发帖、回复、点赞、普通用户访问管理接口被拒绝、作者编辑权限，以及隐藏帖子后游客无法读取其图片。测试数据由实施人员记录并清理；不在生产执行会直接操纵本地数据库的旧 `test:integration` 脚本。记录既有网站的原有响应作为对照。
 
 ### 3. 缓存、防护及代理
 
@@ -102,7 +102,7 @@ python3 deploy/cloudflare/configure.py --host "$HOST" --zone "$ZONE" --action pr
 DNS 确认已代理且域名访问正常后，在 ECS 重新生成并激活 `proxied` 包：
 
 ```sh
-sudo python3 render.py --host "$HOST" --mode proxied --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-proxied
+sudo python3 render.py --host "$HOST" --mode proxied --base-nginx "$NGINX_CONFIG" --output /opt/melon/cloudflare-proxied
 sudo python3 activate.py --bundle /opt/melon/cloudflare-proxied
 ```
 
@@ -113,20 +113,20 @@ sudo python3 activate.py --bundle /opt/melon/cloudflare-proxied
 ### 4. 公网验收
 
 ```sh
-node deploy/cloudflare/verify.mjs smoke --host "$HOST" --mode proxied --credential-file outputs/melon-server-admin.txt --check-rate-limit
+node deploy/cloudflare/verify.mjs smoke --host "$HOST" --mode proxied --credential-file "$ADMIN_CREDENTIAL_FILE" --check-rate-limit
 ```
 
 冒烟检查覆盖资源缓存 HIT、动态响应不命中、Secure/HttpOnly Cookie、旧入口、绕过 Cloudflare 的直接访问和伪造 IP，以及限流 JSON。它不替代两账户功能检查、实际上传图片隐藏检查、证书续期演练及浏览器视觉验收。
 
-最后重启论坛容器核对账户、帖子、图片，检查 Moye 原有响应、服务健康及 Nginx 日志里的 peer/client 区分。不修改服务器整个 443 端口的安全组规则；Moye 仍对公网开放，因此不能声称整台服务器隐藏了 IP 或免受直打攻击。
+最后重启论坛容器核对账户、帖子、图片，检查既有网站原有响应、服务健康及 Nginx 日志里的 peer/client 区分。不修改服务器整个 443 端口的安全组规则；既有网站仍对公网开放，因此不能声称整台服务器隐藏了 IP 或免受直打攻击。
 
 ## 大陆性能验收
 
 在两个**实际不同的大陆网络**分别采样，直连和代理测试应在相近时段（工具要求相差不超过 2 小时）完成，建议包含晚高峰。首次采样在 direct 阶段，之后在 proxied 阶段：
 
 ```sh
-node deploy/cloudflare/verify.mjs sample --host "$HOST" --mode direct --network hangzhou-mobile --confirm-mainland --output direct-mobile.json
-node deploy/cloudflare/verify.mjs sample --host "$HOST" --mode proxied --network hangzhou-mobile --confirm-mainland --output proxied-mobile.json
+node deploy/cloudflare/verify.mjs sample --host "$HOST" --mode direct --network mainland-network-a --confirm-mainland --output direct-mobile.json
+node deploy/cloudflare/verify.mjs sample --host "$HOST" --mode proxied --network mainland-network-a --confirm-mainland --output proxied-mobile.json
 # 在另一个真实网络执行同样流程，使用另一个 network 标签。
 node deploy/cloudflare/verify.mjs compare direct-mobile.json proxied-mobile.json direct-telecom.json proxied-telecom.json
 ```
@@ -143,7 +143,7 @@ node deploy/cloudflare/verify.mjs compare direct-mobile.json proxied-mobile.json
 sudo python3 /opt/melon/cloudflare/activate.py --restore /opt/melon/backups/cloudflare-实际时间
 ```
 
-恢复器只允许恢复当前文件仍与该次激活结果一致的快照；如果中间又做了其他改动，会停止并要求合并差异，避免覆盖 Moye 后续配置。多阶段切换可按快照逆序回退。配置失败自动恢复，无数据库结构迁移；数据备份位于 `/opt/melon/backups/`。恢复旧 IP 后删除论坛 hostname 的 DNS 或明确返回维护页，避免留下错误入口。证书 timer 如不再需要可单独停用，不操作 Moye 的 timer。
+恢复器只允许恢复当前文件仍与该次激活结果一致的快照；如果中间又做了其他改动，会停止并要求合并差异，避免覆盖既有网站后续配置。多阶段切换可按快照逆序回退。配置失败自动恢复，无数据库结构迁移；数据备份位于 `/opt/melon/backups/`。恢复旧 IP 后删除论坛 hostname 的 DNS 或明确返回维护页，避免留下错误入口。证书 timer 如不再需要可单独停用，不操作既有网站的 timer。
 
 ## 本地与隔离测试
 

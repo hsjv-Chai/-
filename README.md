@@ -2,17 +2,18 @@
 
 一个中文热点 BBS。支持真实账户、Markdown 图文发帖、回复引用、点赞、搜索与分页、热榜、精选及基础管理。保留本地 Vinext 预览，同时提供 ECS 生产部署。
 
-## 线上访问
+## 部署方式
 
-已部署至 [🍉 社区](https://114.215.182.66/melon/)，与原有 Moye 网站共用 HTTPS 入口。按要求仅初始化四个分区及管理员，未导入演示内容。
+支持本地 Vinext 预览，以及基于 Node 24、Next.js standalone、SQLite 和磁盘图片存储的 ECS 部署。本地与服务器数据各自独立。
 
-管理员用户名为 `melon_admin`，随机初始密码通过本机 `outputs/melon-server-admin.txt` 私密文件交付。ECS 使用 Node 24、Next.js standalone、SQLite 和磁盘图片存储，数据位于 `/opt/melon/data`。部署、重启、备份及更新步骤见 [ECS 维护说明](deploy/README.md)。本地与服务器数据各自独立。
+- [ECS 部署与维护](deploy/README.md)
+- [Cloudflare 接入说明](deploy/cloudflare/README.md)
 
-Cloudflare 接入工具已准备，详见 [接入包与验收步骤](deploy/cloudflare/README.md)。当前尚未购买域名，因此还未开启 Cloudflare 代理，线上继续使用上述 IP 地址。
+公开文档使用示例域名和通用配置。实际访问地址、账户、联系方式、备案资料和运维记录应保存在私密配置中，不提交到仓库。
 
 ## 启动
 
-要求 Node.js 22.13+（本次使用 24），首次安装需要联网下载依赖。
+要求 Node.js 22.13+（推荐 24），首次安装需要联网下载依赖。
 
 ```sh
 npm ci --cache .sites-runtime/npm-cache
@@ -23,7 +24,7 @@ npm run db:seed
 npm run dev -- --hostname 127.0.0.1
 ```
 
-开发服务默认 http://127.0.0.1:5173，以终端打印地址为准。安装命令使用项目内缓存，以避开此机器系统 npm 缓存中的权限问题。`npm run build && npm start` 启动构建后本地预览，通常为 http://127.0.0.1:8787。本次交付预览使用 `npm start -- --port 5173`。两个模式共享 `.wrangler/state` 中的本地 D1/SQLite 和 R2 数据。应用使用自己的用户名/密码账户，不使用模板的 ChatGPT 模拟登录。
+开发服务默认 http://127.0.0.1:5173，以终端打印地址为准。安装命令使用项目内缓存。`npm run build && npm start` 启动构建后本地预览，通常为 http://127.0.0.1:8787。可用 `npm start -- --port 5173` 指定预览端口。两个模式共享 `.wrangler/state` 中的本地 D1/SQLite 和 R2 数据。应用使用自己的用户名/密码账户，不使用模板的 ChatGPT 模拟登录。
 
 ## 使用与管理
 
@@ -48,7 +49,7 @@ npm run admin -- your_username
 - `npm run db:seed` 可重复执行，不覆盖已有帖子。演示内容带有虚构标识，配图为原创程序绘制插画。
 - 数据与图片都在 `.wrangler/state/`，不加入 Git。请在停止所有开发/预览服务后完整复制该目录备份，恢复时原位替换。只备份源码不包含用户数据。
 - `.sites-runtime/` 保存临时运行文件。不要把 `.wrangler/`、环境变量、密码或备份提交到 Git。
-- `npm run dev` 与 `npm start` 默认仅监听回环地址。ECS 使用单独的生产容器，未注册 Sites 云站点。
+- `npm run dev` 与 `npm start` 默认仅监听回环地址。ECS 部署使用独立容器。
 
 ## 验证
 
@@ -61,7 +62,7 @@ npm run test:integration
 
 集成测试通过本地 API 创建两个临时账户，检查账户、发帖、图片、引用、点赞、输入错误、越权、管理及分页；测试结束清理专用测试数据。它会在测试账户上临时授予管理权限，不改变其他账户角色。浏览器验证结果见 `VERIFICATION.md`。
 
-首版不包含私信、匿名、关注、通知、外部热榜、密码找回或完整举报审核。ECS 已启用 HTTPS、容器重启策略与手动备份脚本；尚未配置定时备份。
+首版不包含私信、匿名、关注、通知、外部热榜、密码找回或完整举报审核。生产部署应配置 HTTPS、容器重启策略与定期备份。
 
 ## 实现说明
 

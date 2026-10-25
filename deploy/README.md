@@ -1,24 +1,26 @@
 # ECS 部署
 
-Cloudflare 免费代理接入准备及分阶段操作见 [Cloudflare 接入包](cloudflare/README.md)。当前尚未购买域名，生产仍使用原 IP 入口。
+Cloudflare 免费代理接入准备及分阶段操作见 [Cloudflare 接入包](cloudflare/README.md)。实际域名、账户、证书联系人及发布记录由维护者私下保存。
 
 本项目同时保留原 Vinext/Worker 本地运行方式，并提供 Next.js standalone / Node 24 的 ECS 生产方式。生产使用 `node:sqlite`（WAL、外键、5 秒 busy timeout）与磁盘图片目录。事务适配层保证帖子与图片关联批量写入原子性。
 
-## 当前布局
+以下域名和目录为通用示例；仓库脚本包含特定环境绑定，复用前须核对路径、网络、容器名及源站地址。示例不是实际访问入口。
 
-- 公网入口：`https://114.215.182.66/melon/`（规范路径可能跳转至 `/melon`）。
+## 部署布局示例
+
+- 公网入口：`https://example.com/melon/`（规范路径可能跳转至 `/melon`）。
 - 应用目录：`/opt/melon`；Compose：`/opt/melon/compose.yml`；版本由 `/opt/melon/.env` 中 `MELON_IMAGE` 指定。
 - 数据目录：`/opt/melon/data`，其中 `melon.sqlite` 及 WAL/SHM 为数据库，`uploads/` 为图片。
-- 网络：加入已有 `moye_default`，别名 `melon-app`；3100 端口仅绑定服务器回环地址。
-- Nginx：在 `/opt/moye/deploy/nginx.conf` 的 HTTPS server 中加入 `nginx-location.conf`；不覆盖原有 location。通过 Docker DNS 动态解析应用地址。
-- HTTPS 沿用现有 IP 证书及其续期流程。公网仅通过原 80/443 入口。
+- 网络：加入自己的 Docker 网络，别名 `melon-app`；3100 端口仅绑定服务器回环地址。
+- Nginx：在反代配置文件的 HTTPS server 中加入 `nginx-location.conf`；不覆盖原有 location。通过 Docker DNS 动态解析应用地址。
+- HTTPS 使用有效证书及自动续期。公网仅通过原 80/443 入口。
 - 容器使用非 root 用户，移除 Linux capabilities，设置重启策略、健康检查及日志轮转。
 
 ## 初始化
 
-容器每次启动运行 `scripts/init-ecs.mjs`。只应用尚未登记的迁移、创建缺失分区；仅在不存在管理员时创建 `melon_admin` 和随机强密码。密码文件保存在 `/opt/melon/data/initial-admin.txt`，权限 600。重复启动不会重置账户或插入演示帖子。
+容器每次启动运行 `scripts/init-ecs.mjs`。只应用尚未登记的迁移、创建缺失分区；仅在不存在管理员时创建管理员和随机强密码。初始凭据保存在数据目录的私密文件中，权限 600，通过受控渠道交付。重复启动不会重置账户或插入演示帖子。
 
-`NEXT_PUBLIC_BASE_PATH=/melon` 是构建期配置；`MELON_PUBLIC_ORIGIN=https://114.215.182.66` 是请求来源校验与 Secure Cookie 的生产依据。反代必须保留 Host 并设置 X-Forwarded-Proto。
+`NEXT_PUBLIC_BASE_PATH=/melon` 是构建期配置；`MELON_PUBLIC_ORIGIN=https://example.com` 是请求来源校验与 Secure Cookie 的生产依据。反代必须保留 Host 并设置 X-Forwarded-Proto。
 
 ## 操作
 
@@ -27,7 +29,7 @@ cd /opt/melon
 sudo docker compose ps
 sudo docker compose logs --tail 100 app
 sudo docker compose restart app
-curl -fsS https://114.215.182.66/melon/api/health
+curl -fsS https://example.com/melon/api/health
 sudo sh /opt/melon/backup-ecs.sh
 ```
 
@@ -41,20 +43,10 @@ sudo sh /opt/melon/backup-ecs.sh
 4. 检查健康端点、登录和页面。仅在新版本迁移与旧版本兼容时直接切回旧镜像。
 5. 首次部署若需移除入口，从 Nginx 配置移除 `BEGIN melon-community` 到 `END melon-community` 区块；先 `nginx -t`，再平滑 reload。不要直接覆盖其他应用的后续配置更新。
 
+打包构建源码时需包含 `.openai/hosting.json`，排除环境文件、用户数据、输出目录及密钥。
+
 官方参考：[Next.js 自托管](https://nextjs.org/docs/app/guides/self-hosting)、[Docker 的 Next.js 指南](https://docs.docker.com/guides/nextjs/)、[Node.js SQLite](https://nodejs.org/download/release/latest-v24.x/docs/api/sqlite.html)。
 
-## 牌室版本
+牌室与种瓜沿用已有账户与持久化目录。更新、备份和回退前确认无进行中的牌局；回退不能用旧数据库覆盖新的用户数据。具体生产镜像、快照位置及运维记录不得写入公开文档。
 
-牌室亮牌版本镜像为 `melon-community:20261023-reveal-v1`，源代码位于 `/opt/melon/releases/20261023-reveal-v1`，入口 `https://114.215.182.66/melon/games`。迁移只增加 `game_rooms` 表；旧 BBS 表未改动。
-
-`update-image.sh` 用于切换已在隔离数据上验收过、迁移向后兼容的镜像；以 root 运行，参数为 `melon-community:<版本>`。它备份整个数据目录及原 `.env`（不输出内容），修改镜像变量、仅重建论坛容器，健康检查失败则自动恢复原镜像配置。上一个版本为 `melon-community:20261022-cards-v1`；若需回退，可用同一脚本切换旧镜像，保留新增表，不恢复旧数据库覆盖新内容。
-
-打包构建源码时需包含 `.openai/hosting.json`（只有本地 DB/BUCKET 绑定名称，供 Vite 配置类型检查使用），排除环境文件、用户数据、输出目录及密钥。
-
-## 种瓜版本（当前）
-
-当前镜像 `melon-community:20261023-garden-v1`，源代码 `/opt/melon/releases/20261023-garden-v1`，入口 `https://114.215.182.66/melon/garden/`。迁移 `0002_narrow_blob` 仅新增 `garden_check_ins`；没有修改牌室规则或运行牌室测试。
-
-2026-10-23 14:22（北京时间）发布，镜像 SHA256 `37de5a1efac9aadbe699125b46ec698d30b5e7740ac9935e83ad1eadfc465e5b`。发布前检查无进行中牌局。数据备份 `/opt/melon/backups/melon-data-20261023T062222Z.tar.gz`；旧镜像配置 `/opt/melon/backups/env-before-20261023T062222Z`。
-
-回退命令：`sudo sh /opt/melon/update-image.sh melon-community:20261023-reveal-v1`。回退也应避开进行中的牌局。新增签到表可保留，不要用旧数据库覆盖上线后用户内容。玩法与接口测试见 `GARDEN.md`；代理限制及验收边界见 `VERIFICATION.md`。
+玩法与验证：[牌室](../CARD_ROOM.md)、[种瓜](../GARDEN.md)、[验证记录](../VERIFICATION.md)。
