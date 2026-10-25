@@ -1,159 +1,156 @@
-# 🍉 Cloudflare 接入包
+# 🍉 根域名接入包
 
-状态：**配置和验证工具已准备，未接通 Cloudflare。** 用户尚未购买域名；没有创建域名、DNS 记录或付费资源，没有切换服务器来源配置。当前生产入口仍是 `https://114.215.182.66/melon/`。
+目标为 **https://gua4u.cn/**，牌室 `/games`、种瓜 `/garden`。已购买域名，但备案仍在进行。本次只准备代码、候选镜像和隔离测试；生产仍是 `https://114.215.182.66/melon/`，没有切换 DNS、签发域名证书或激活域名虚拟主机。实际结果见 [验收记录](VERIFICATION-ROOT.md)。
 
-## 前置输入与边界
+使用 Cloudflare Free 代理及 ECS HTTPS 回源，保留 SQLite、图片、账户、Moye 和 SSH，不购买产品，不部署 Workers/D1/R2/Tunnel。正式域名启用后需重新登录，Cookie 使用 `/`、Secure、HttpOnly、SameSite=Lax。
 
-- 实际购买的域名，论坛固定使用其 `bbs` 子域名，路径保留 `/melon`。
-- 向阿里云确认杭州 ECS 上论坛业务的域名接入及备案条件。
-- 证书通知邮箱。签发脚本使用 Let's Encrypt/Certbot 标准 ACME 流程及服务条款。
-- 两个真实大陆网络，用于直连/代理对比。网络标签由测试人员填写，工具不会把同一台机器的两次运行当成两个真实网络的证明。
+## 上线条件与私密配置
 
-保留现有应用镜像、SQLite、图片、Moye 和 SSH。使用 Cloudflare Free；不部署 Workers、D1、R2 或 Tunnel，不购买服务。域名变化需要重新登录，不迁移旧 IP 的 Cookie。
+必须先取得真实备案号、确认阿里云接入完成，再实施以下正式操作。不要因为 DNS 可以解析就判定备案通过。参见 [阿里云备案期间访问要求](https://help.aliyun.com/zh/icp-filing/the-influence-of-the-record-during-the-site-visit)。
 
-本地需 Python 3、Node 24 和已授权的 `cf`；ECS 脚本兼容现有 Python 3.6、curl、Docker。当前 cf 0.15.0 的 `cf cli search` 尚不可用，接入脚本使用已由 `--help`、`cf schema` 和 `--dry-run` 验证的命令。
+私密 readiness JSON 放在本机 `.sites-runtime/domain/gua4u.cn-readiness.json`，上线时安全复制到 ECS `/opt/melon/domain-readiness.json`，权限 600，禁止提交 Git。包含：
 
-## 文件与安全行为
+```json
+{
+  "host": "gua4u.cn",
+  "icp_approved": false,
+  "aliyun_access_confirmed": false,
+  "icp_number": "",
+  "certificate_email": ""
+}
+```
 
-- `render.py`：从当前 Nginx 配置生成 `acme`、`direct` 或 `proxied` 配置包，实时读取官方 IPv4/IPv6 来源网段。没有远端写操作。
-- `activate.py`：在 ECS 应用配置。先检查实际域名、24 小时有效期、来源网段、原文件哈希及证书，再备份并运行 `nginx -t`；失败自动恢复文件、Compose 和 Nginx。保留文件 inode，兼容现有单文件 bind mount。
-- `configure.py`：通过现有 `cf` OAuth 进行 DNS、TLS、缓存配置。默认只读与 dry-run，`--apply` 才会写；保存变更前快照，拒绝冲突 DNS、歧义规则及超出免费缓存规则数量。仅替换两个 `melon_*` 缓存规则，保留其他规则顺序。
-- `certificate.sh` 和 systemd 模板：签发、续期域名证书。与 Moye 的 IP 证书续期分别运行，不停 Nginx。
-- `verify.mjs`：公网冒烟检查、测速采样与两网络对比。不会打印密码；可通过本地私密凭据文件检查管理员登录，最后退出。
+本机文件已填入用户提供的联系邮箱，并保留两个 `false`。仅在实际满足条件后填写真实备案号并改为 `true`。`activate.py`、`configure.py --apply`、证书签发均检查此文件；缺失、权限过宽或未获批准会拒绝操作。邮箱只用于运行配置，页脚只展示已确认的备案号并链接 `https://beian.miit.gov.cn/`。
 
-生成的包包含 Nginx、DNS 和缓存规则 JSON、TLS 设置及哈希清单。`bbs.example.com` 只能用于示例，激活器明确拒绝它。运行文件放 `.sites-runtime/cloudflare/`，凭据和备份不提交 Git。
+## DNS 清单与迁移
 
-## 实施顺序（域名到位后）
+公开查询无法枚举所有子域记录。迁移前必须从阿里云导出**全部记录**，记录 TTL、代理状态、邮箱 MX、SPF/DKIM/DMARC、验证 TXT、CAA、子域及其他用途；逐条复核 Cloudflare 导入，不能只依赖自动扫描。再核对注册商的 DNSSEC/DS 和原 DNS 签名状态，按提供商流程先移除旧 DS、等待生效，再改 NS；Cloudflare 稳定后再启用 DNSSEC 并登记新 DS，避免验证失败。
 
-以下 `HOST`、`ZONE` 必须填写实际值。由执行接入的工程师操作，不要求站长手动执行这些命令。
+| 项目 | 目标/处理 |
+| --- | --- |
+| zone | `gua4u.cn`，Free；本轮未创建 |
+| 根域名 A（界面名 `@`，API 名 `gua4u.cn`） | `114.215.182.66`，先 DNS-only、TTL 300 |
+| 根域名 AAAA/CNAME/HTTPS/SVCB | 若存在冲突先核实用途；脚本拒绝自动覆盖 |
+| MX/TXT/CAA/其他子域 | 保留并逐项核对，不删除、不臆造 |
+| nameservers | 使用未来 Cloudflare 分配的实际 NS，不使用示例值 |
+| DNSSEC/注册商 DS | 尚未核实，必须从阿里云核对后再迁移 |
+| `www` | 本次不新增；若已存在，保留原用途 |
 
-### 1. 添加域名、准备源站证书
-
-将新域名加入当前 Cloudflare 账户的免费计划，在注册商完成 Nameserver 设置，等待 zone 为 `active`。先完整核对 DNS 和 DNSSEC 状态，不直接覆盖其他用途记录。
-
-在本机对 DNS 创建执行预览，再应用：
+备案及接入完成后，再加入 Cloudflare Free zone、迁移 NS，等待 zone active。使用已授权 `cf` CLI，脚本默认只读和 dry-run；先审阅再加 `--apply --readiness 私密文件`。根域名与 zone 名称相等合法，其他域名必须是该 zone 的子域；拒绝相似但无关的域名。
 
 ```sh
+HOST=gua4u.cn
+ZONE=实际的zone-id
 python3 deploy/cloudflare/configure.py --host "$HOST" --zone "$ZONE" --action dns-direct --snapshot-dir .sites-runtime/cloudflare/account
-# 检查预览后，使用相同命令添加 --apply
+# 核对 DNS 全清单、DNSSEC、免费套餐及预览后，才在同一命令追加：
+# --apply --readiness .sites-runtime/domain/gua4u.cn-readiness.json
 ```
 
-复制本目录到 ECS `/opt/melon/cloudflare/`。在 ECS 根据**当时的**配置生成 ACME 包；每阶段都使用新输出目录：
+脚本只处理指定主机的 A 记录，保存变更前快照（600），保留其他记录；不会帮你购买域名或自动迁移 NS。`edge` 会更改 zone 级 TLS/HTTPS/Rocket Loader 设置，执行前也要核对其他子域的兼容性。
+
+## 镜像与切换准备
+
+本机使用 Python 3、Node 24、已登录的 `cf`；ECS 使用 Python 3.6+、Docker、curl。从完整且不含私密文件的源码构建：
 
 ```sh
-cd /opt/melon/cloudflare
-sudo python3 render.py --host "$HOST" --mode acme --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-acme
-sudo python3 activate.py --bundle /opt/melon/cloudflare-acme
-sudo sh certificate.sh issue "$HOST" "$ACME_EMAIL"
+sudo docker build --network host --build-arg BASE_PATH= -f deploy/Dockerfile -t melon-community:根路径版本 .
 ```
 
-ACME 阶段仅增加该域名的 HTTP 验证入口，旧论坛入口保持原状。证书在现有证书卷 `/opt/moye/deploy/letsencrypt/live/<HOST>/` 中，与 IP 证书隔离。
+镜像必须同时有空 `NEXT_PUBLIC_BASE_PATH` 和 `io.melon.base-path` 标签。Compose 的 `${MELON_BASE_PATH-/melon}` 使用单个减号：未设时兼容旧站，显式空值才是根路径。健康检查从运行时 base path 生成 `/api/health`。不要用普通 `update-image.sh` 跨路径切换，它会拒绝镜像与当前路径不一致。
 
-安装续期任务：
+将本目录复制到 `/opt/melon/cloudflare/`，备份脚本保持 `/opt/melon/backup-ecs.sh`。以下操作仅在备案、阿里云接入及 DNS 清单核对完成后执行。每次生成新目录；包超过 24 小时、来源网段或线上 Nginx 改变，都必须重新生成并审阅。
+
+## 证书与域名直连
+
+在 ECS 中设置：
+
+```sh
+HOST=gua4u.cn
+READY=/opt/melon/domain-readiness.json
+IMAGE=melon-community:已测试的根路径版本
+cd /opt/melon/cloudflare
+sudo python3 render.py --host "$HOST" --mode acme --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-acme-实际时间
+sudo python3 activate.py --bundle /opt/melon/cloudflare-acme-实际时间 --readiness "$READY"
+sudo sh certificate.sh issue "$HOST" "$READY"
+sudo sh certificate.sh verify-renewal "$HOST"
+```
+
+ACME 阶段只增加域名 HTTP challenge 虚拟主机，论坛仍在旧 IP。证书为浏览器信任的 Let's Encrypt 证书，存储在现有卷 `live/gua4u.cn/`，与 Moye/IP 证书隔离。`verify-renewal` 使用 Certbot staging `--dry-run`，通过后安装定时续期（每天两次检查）：
 
 ```sh
 sudo cp melon-certificate@.service melon-certificate@.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now "melon-certificate@$HOST.timer"
+sudo systemctl enable --now melon-certificate@gua4u.cn.timer
+sudo systemctl list-timers melon-certificate@gua4u.cn.timer
 ```
 
-证书签发后运行 Certbot `renew --cert-name "$HOST" --dry-run` 验证挑战与续期；查看 timer 的下次执行时间。HTTP 与 HTTPS 都保留 ACME challenge 路径，兼容边缘 HTTP→HTTPS 跳转。
-
-### 2. 域名直连验证
-
-重新读取 Nginx 并生成 `direct` 包：
+随后按当前 Nginx 重新生成 direct 包：
 
 ```sh
-sudo python3 render.py --host "$HOST" --mode direct --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-direct
-sudo python3 activate.py --bundle /opt/melon/cloudflare-direct
+sudo python3 render.py --host "$HOST" --mode direct --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-direct-实际时间
+sudo python3 activate.py --bundle /opt/melon/cloudflare-direct-实际时间 --image "$IMAGE" --readiness "$READY"
 ```
 
-该步骤将 Compose 中来源变量参数化，并在 `/opt/melon/.env` 写入正式 HTTPS 来源。旧 IP 的 `/melon` GET/HEAD 返回 **302 + no-store**，保留路径和查询参数；写请求返回 JSON 410。302 便于回退，不提前留下永久跳转缓存。
+激活器检查备案文件、镜像路径、证书、配置哈希及无进行中的牌局，备份数据与 Nginx/Compose/.env；同时切换镜像、空 `MELON_BASE_PATH`、`MELON_PUBLIC_ORIGIN=https://gua4u.cn` 和真实备案号。写 Nginx 时保留 inode，兼容单文件挂载。发生失败时整体恢复原文件与容器配置，不恢复旧数据库覆盖新数据。正式操作需安排短暂维护时段，避免检查后又开启牌局。
 
-在本机执行：
+新域名及旧 IP HTTPS 的 `/melon`、`/melon/...` GET/HEAD 使用 302 + no-store 跳至根路径，保留原始转义路径和查询参数；POST/PUT/PATCH/DELETE 返回 JSON 410。旧 IP HTTP 仍先沿用原有 HTTPS 跳转。`/melonade` 等不同路径不匹配。Moye 的 IP 根路径及 SSH 保持原状。
+
+## Cloudflare、防护与缓存
+
+先完成域名 DNS-only 的 HTTPS 和完整功能检查，再执行 `edge` 预览/应用，确认边缘证书 active 后执行 `proxy-on` 预览/应用。命令结构与 `dns-direct` 相同，替换 `--action`。所有写入仍需 readiness 文件。
+
+- Full (strict)、Always Use HTTPS、Rocket Loader off；核对免费 Free Managed Ruleset 和安全事件，不添加付费托管规则。
+- 仅允许 `/_next/static/` 下 GET/HEAD 的 JS/CSS 缓存，遵循源站缓存头。Nginx 只对 200/304 设置一年 immutable。
+- HTML、所有 API、搜索、登录、种瓜、牌局状态、图片和错误均不缓存；图片仍需应用检查可见性。其他路径在 Cloudflare bypass，源站 private/no-store。
+- `/api/auth/login` 与 `/api/auth/register` 的 POST 按真实访客 IP 限制 10 次/分钟、burst 10；JSON 429、no-store、Retry-After 60；保留应用按用户名限制。
+
+确认代理可用后再生成并激活 `proxied` 包（同 direct 命令，替换模式及目录），仅论坛虚拟主机限制 Cloudflare 网段。判断连接来源使用 `$realip_remote_addr`；只信任官方网段送来的 `CF-Connecting-IP`。HTTP/HTTPS ACME challenge 保留。定期核对官方来源网段再重新生成配置，不修改整个服务器安全组，Moye 的公网入口保持可用。
+
+Cloudflare 的来源白名单基于其共享出口网段，并不构成对“指定账户”的加密认证。本方案保留与 Moye 共用的公网 IP，不能承诺隐藏源站或防止全部直打。
+
+## 验收
+
+优先在 ECS 内以 `curl --noproxy '*'` 检查源站及 Nginx，并通过独立解析器核对 DNS；外部直连/代理效果须单独测量。
 
 ```sh
-node deploy/cloudflare/verify.mjs smoke --host "$HOST" --mode direct --credential-file outputs/melon-server-admin.txt
+node deploy/cloudflare/verify.mjs smoke --host gua4u.cn --mode direct --credential-file 私密管理员文件
+node deploy/cloudflare/verify.mjs smoke --host gua4u.cn --mode proxied --credential-file 私密管理员文件 --check-rate-limit
 ```
 
-通过浏览器使用两个临时账户完整验证注册、图文发帖、回复、点赞、普通用户访问管理接口被拒绝、作者编辑权限，以及隐藏帖子后游客无法读取其图片。测试数据由实施人员记录并清理；不在生产执行会直接操纵本地数据库的旧 `test:integration` 脚本。记录 Moye 的原有响应作为对照。
+必须另外完成临时账户的发帖、图片、种瓜、牌局邀请/操作、权限隔离和隐藏图片访问检查。隔离测试脚本会直接操作测试数据库，禁止对生产运行。上线后的数据备份和配置备份记录实际路径；验证容器重启及 Moye 状态。
 
-### 3. 缓存、防护及代理
-
-```sh
-python3 deploy/cloudflare/configure.py --host "$HOST" --zone "$ZONE" --action edge --snapshot-dir .sites-runtime/cloudflare/account
-# 审查后添加 --apply；此操作包含 zone 级 TLS/HTTPS/Rocket Loader 设置。
-python3 deploy/cloudflare/configure.py --host "$HOST" --zone "$ZONE" --action proxy-on --snapshot-dir .sites-runtime/cloudflare/account
-# 确认边缘证书已 active、直连及测速基线通过后，添加 --apply。
-```
-
-`edge` 配置 Full (strict)、Always Use HTTPS、关闭 Rocket Loader。Free Managed Ruleset 使用免费套餐自动启用的规则，在控制台核实安全事件；不创建付费托管规则，也不开启整站 JS 挑战。
-
-缓存规则仅针对论坛 hostname，追加在原有规则后：
-
-| 路径/响应 | 策略 |
-| --- | --- |
-| `/melon/_next/static/` 下 GET/HEAD 的 JS/CSS | 遵守源站缓存头；源站只对成功响应设置 immutable |
-| HTML、API、用户图片、其他路径 | bypass，源站 `private, no-store` |
-| 404、429 和其他错误 | no-store |
-
-免费套餐的 Origin Cache Control 默认开启，不提交 Enterprise-only 开关。上传图片始终经过应用可见性校验。
-
-DNS 确认已代理且域名访问正常后，在 ECS 重新生成并激活 `proxied` 包：
+两个真实大陆网络分别在 direct/proxied 阶段采样，时间相差不超过两小时，默认每组 100 个动态请求：
 
 ```sh
-sudo python3 render.py --host "$HOST" --mode proxied --base-nginx /opt/moye/deploy/nginx.conf --output /opt/melon/cloudflare-proxied
-sudo python3 activate.py --bundle /opt/melon/cloudflare-proxied
-```
-
-仅论坛 HTTPS 虚拟主机限制 Cloudflare 来源。限制依据 `$realip_remote_addr`（TCP 连接对端），绝不按可伪造的请求头放行；只有官方来源网段能设置真实访客 IP。登录、注册按访客 IP 限制 10 次/分钟、burst 10，返回 JSON 429 和 `Retry-After: 60`，不会限制普通阅读请求。
-
-定期核对 Cloudflare 官方来源网段，变化时从当前配置重新生成、检查并应用 proxied 包。本包没有创建后台自动更新任务。
-
-### 4. 公网验收
-
-```sh
-node deploy/cloudflare/verify.mjs smoke --host "$HOST" --mode proxied --credential-file outputs/melon-server-admin.txt --check-rate-limit
-```
-
-冒烟检查覆盖资源缓存 HIT、动态响应不命中、Secure/HttpOnly Cookie、旧入口、绕过 Cloudflare 的直接访问和伪造 IP，以及限流 JSON。它不替代两账户功能检查、实际上传图片隐藏检查、证书续期演练及浏览器视觉验收。
-
-最后重启论坛容器核对账户、帖子、图片，检查 Moye 原有响应、服务健康及 Nginx 日志里的 peer/client 区分。不修改服务器整个 443 端口的安全组规则；Moye 仍对公网开放，因此不能声称整台服务器隐藏了 IP 或免受直打攻击。
-
-## 大陆性能验收
-
-在两个**实际不同的大陆网络**分别采样，直连和代理测试应在相近时段（工具要求相差不超过 2 小时）完成，建议包含晚高峰。首次采样在 direct 阶段，之后在 proxied 阶段：
-
-```sh
-node deploy/cloudflare/verify.mjs sample --host "$HOST" --mode direct --network hangzhou-mobile --confirm-mainland --output direct-mobile.json
-node deploy/cloudflare/verify.mjs sample --host "$HOST" --mode proxied --network hangzhou-mobile --confirm-mainland --output proxied-mobile.json
-# 在另一个真实网络执行同样流程，使用另一个 network 标签。
+node deploy/cloudflare/verify.mjs sample --host gua4u.cn --mode direct --network hangzhou-mobile --confirm-mainland --output direct-mobile.json
+node deploy/cloudflare/verify.mjs sample --host gua4u.cn --mode proxied --network hangzhou-mobile --confirm-mainland --output proxied-mobile.json
+# 在另一实际大陆网络同样采样。
 node deploy/cloudflare/verify.mjs compare direct-mobile.json proxied-mobile.json direct-telecom.json proxied-telecom.json
 ```
 
-每组默认 100 次动态帖子列表请求，记录 HTTP 状态、总响应耗时与 CF-Ray。只有两组网络均满足成功率 ≥99%、代理 P95 ≤直连 P95×1.3 才返回通过；核心功能另外验收。没有真实数据就标记“未验收”。大陆经全球网络可能增加延迟，不能预先承诺加速。
+验收线：每个网络成功率至少 99%，代理 P95 不超过直连 1.3 倍，核心操作无新增失败。不能把同一台机器改两个标签当成两个网络，也不能把 ECS 内访问当成公网体验。没有实测数据不宣称提速或性能通过。
 
 ## 回退
 
-**仅退回域名直连：** 使用当前 Nginx 重新生成新的 direct 包并激活（先允许直连），再通过 `configure.py --action proxy-off` 预览并应用。浏览器信任的源站证书继续有效；Cloudflare 防护此时不生效。不要先关代理而保留源站白名单，否则会造成 403。
+**退回同域名直连：** 从当前配置生成并激活 direct 包，先解除论坛 Cloudflare 来源限制；再 `configure.py --action proxy-off` 预览并应用。源站有效证书保留，Cloudflare 边缘防护不再生效。不能先关闭代理而保留来源限制。
 
-**恢复旧应用入口：** 先安排 DNS 退回直连，再使用首次域名切换前的备份：
+**恢复旧镜像及 `/melon`：** 使用首次 direct 激活前的协调快照。若之后又激活了 proxied，先按相反顺序恢复配置快照；脚本要求当前文件哈希仍与该次应用结果一致，避免覆盖后来改动：
 
 ```sh
 sudo python3 /opt/melon/cloudflare/activate.py --restore /opt/melon/backups/cloudflare-实际时间
 ```
 
-恢复器只允许恢复当前文件仍与该次激活结果一致的快照；如果中间又做了其他改动，会停止并要求合并差异，避免覆盖 Moye 后续配置。多阶段切换可按快照逆序回退。配置失败自动恢复，无数据库结构迁移；数据备份位于 `/opt/melon/backups/`。恢复旧 IP 后删除论坛 hostname 的 DNS 或明确返回维护页，避免留下错误入口。证书 timer 如不再需要可单独停用，不操作 Moye 的 timer。
+恢复镜像版本、Compose、来源、路径及 Nginx，不覆盖用户数据库。若快照哈希不匹配，先人工审查差异。恢复旧入口后为域名配置维护页或移除论坛解析，避免留下错误入口。证书 timer 可单独停用，不能影响 Moye 的 timer。
 
-## 本地与隔离测试
+## 可重复的隔离测试
 
 ```sh
-python3 -m unittest discover -s deploy/cloudflare -p 'test_*.py' -v
+python3 -m unittest discover -s deploy/cloudflare -p 'test_*.py'
 node --test deploy/cloudflare/test-verify.mjs
-# ECS：在本目录运行；仅使用临时网络、模拟后端及测试证书，无 host ports。
-sudo sh test-proxy.sh
+# ECS：只使用专属临时 Docker 网络、模拟后端、自签名测试证书，不映射主机端口。
+cd deploy/cloudflare && sudo sh test-proxy.sh
 ```
 
-测试中的自签名证书仅用于隔离夹具，生产脚本始终验证 HTTPS 证书。测试退出自动清理专属容器、网络和临时证书。
+应用根路径还可在独立 Node 数据目录运行 `scripts/test-root-domain.mjs`。要求 loopback URL、目录名包含 `root-domain-qa`，服务器配置 HTTPS 正式来源；测试检查根 Cookie、同源保护、静态资源和运行时备案页脚。它不验证真实公网 TLS。自签名证书、示例域名和测试备案号只用于隔离夹具，生产脚本拒绝示例域名。
 
-参考：[严格回源加密](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)、[缓存规则 API](https://developers.cloudflare.com/cache/how-to/cache-rules/create-api/)、[来源网段](https://developers.cloudflare.com/fundamentals/concepts/cloudflare-ip-addresses/)、[大陆访问说明](https://developers.cloudflare.com/support/troubleshooting/general-troubleshooting/geographic-traffic-routing/)。
+参考：[严格回源](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)、[缓存规则](https://developers.cloudflare.com/cache/how-to/cache-rules/create-api/)、[官方网段](https://developers.cloudflare.com/fundamentals/concepts/cloudflare-ip-addresses/)。

@@ -47,7 +47,7 @@ async function main(){
   }
   assert.match(v.host||'',/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/,'Supply --host without scheme or path');
   assert.ok(['direct','proxied'].includes(v.mode),'Supply --mode direct or proxied');
-  const origin=`https://${v.host}`,base=origin+'/melon';
+  const origin=`https://${v.host}`,base=origin;
   async function request(path,opts={}){
     return fetch(base+path,{redirect:'manual',signal:AbortSignal.timeout(15000),...opts});
   }
@@ -78,8 +78,8 @@ async function main(){
     check(!['HIT','STALE','UPDATING','REVALIDATED'].includes(r.headers.get('cf-cache-status')),`${path} not edge-cached`);
     await r.arrayBuffer();
   }
-  const html=await (await request('')).text();
-  const asset=[...html.matchAll(/(?:src|href)="([^" ]+\.(?:js|css)(?:\?[^" ]*)?)"/g)].map(m=>m[1]).find(p=>p.startsWith('/melon/_next/static/'));
+  const html=await (await request('/')).text();
+  const asset=[...html.matchAll(/(?:src|href)="([^" ]+\.(?:js|css)(?:\?[^" ]*)?)"/g)].map(m=>m[1]).find(p=>p.startsWith('/_next/static/'));
   check(Boolean(asset),'versioned asset discovered');
   let hit=false;
   for(let i=0;i<3;i++){
@@ -89,12 +89,14 @@ async function main(){
   }
   if(v.mode==='proxied'){
     check(hit,'static asset reached Cloudflare HIT');
-    const status=execFileSync('curl',['-sS','--max-time','15','--resolve',`${v.host}:443:114.215.182.66`,
+    const status=execFileSync('curl',['--noproxy','*','-sS','--max-time','15','--resolve',`${v.host}:443:114.215.182.66`,
       '-H','CF-Connecting-IP: 173.245.48.1','-o','/dev/null','-w','%{http_code}',base+'/api/health'],{encoding:'utf8'});
     check(status==='403','origin blocks direct requests, including forged forwarding headers');
   }
   const old=await fetch('https://114.215.182.66/melon/post/qa?q=1',{redirect:'manual',signal:AbortSignal.timeout(15000)});
   check(old.status===302&&old.headers.get('location')===base+'/post/qa?q=1','old URL redirect preserves path and query');
+  const legacy=await request('/melon/games/qa?q=1');
+  check(legacy.status===302&&legacy.headers.get('location')===origin+'/games/qa?q=1','same-domain legacy links redirect without prefix');
   const refused=await fetch('https://114.215.182.66/melon/api/posts',{method:'POST',signal:AbortSignal.timeout(15000)});
   check(refused.status===410,'old writes rejected');
   if(v['credential-file']){
@@ -105,7 +107,7 @@ async function main(){
     assert.equal(login.status,200,'Administrator login');
     const raw=login.headers.get('set-cookie')||'',cookie=raw.split(';')[0];
     try{
-      check(raw.includes('HttpOnly')&&raw.includes('Secure')&&raw.includes('Path=/melon'),'secure session cookie');
+      check(raw.includes('HttpOnly')&&raw.includes('Secure')&&/(?:^|;\s*)Path=\/(?:;|$)/.test(raw),'secure session cookie');
       const me=await request('/api/auth/me',{headers:{Cookie:cookie}});check((await me.json()).user?.role==='admin','admin role retained');
       const guest=await request('/api/admin');check(guest.status===401,'guest admin request refused');
     }finally{

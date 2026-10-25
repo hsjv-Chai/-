@@ -11,9 +11,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const filing = process.env.MELON_ICP_NUMBER?.trim();
+  const showFiling = filing && /^[\u4e00-\u9fff]ICP备[0-9]{6,16}号(?:-[0-9]+)?$/.test(filing);
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>{children}{showFiling && <footer className="filing-footer"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{filing}</a></footer>}</body>
     </html>
   );
 }

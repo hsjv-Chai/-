@@ -10,20 +10,20 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 docker network create "$test_id" >/dev/null
-mkdir -p "$task_root/certs/live/bbs.example.com" "$task_root/certs/live/114.215.182.66"
+mkdir -p "$task_root/certs/live/example.com" "$task_root/certs/live/114.215.182.66"
 mkdir -p "$task_root/acme/.well-known/acme-challenge"
 printf 'acme-proof\n' > "$task_root/acme/.well-known/acme-challenge/qa"
-openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=bbs.example.com \
-  -keyout "$task_root/certs/live/bbs.example.com/privkey.pem" \
-  -out "$task_root/certs/live/bbs.example.com/fullchain.pem" >/dev/null 2>&1
-cp "$task_root/certs/live/bbs.example.com/privkey.pem" "$task_root/certs/live/114.215.182.66/privkey.pem"
-cp "$task_root/certs/live/bbs.example.com/fullchain.pem" "$task_root/certs/live/114.215.182.66/fullchain.pem"
+openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=example.com \
+  -keyout "$task_root/certs/live/example.com/privkey.pem" \
+  -out "$task_root/certs/live/example.com/fullchain.pem" >/dev/null 2>&1
+cp "$task_root/certs/live/example.com/privkey.pem" "$task_root/certs/live/114.215.182.66/privkey.pem"
+cp "$task_root/certs/live/example.com/fullchain.pem" "$task_root/certs/live/114.215.182.66/fullchain.pem"
 cp test-proxy.mjs "$task_root/"
 cat > "$task_root/upstream.mjs" <<'JS'
 import http from 'node:http';
 http.createServer((req,res)=>{
   res.setHeader('Cache-Control','public, max-age=3600');
-  if(req.url==='/'){res.end('moye-ok');return;}
+  if(req.url==='/'&&req.headers.host==='114.215.182.66'){res.end('moye-ok');return;}
   if(req.url.includes('missing.js')){res.statusCode=404;res.end('not found');return;}
   if(req.url.includes('_next/static')){res.end('console.log("fixture")');return;}
   if(req.method==='POST')res.statusCode=400;
@@ -44,7 +44,7 @@ python3 - "$task_root" "$trusted_ip" direct <<'PY'
 import sys
 from pathlib import Path
 from render import render
-p=Path(sys.argv[1]); (p/'nginx.conf').write_text(render((p/'base.conf').read_text(),'bbs.example.com',sys.argv[3],[sys.argv[2]+'/32']))
+p=Path(sys.argv[1]); (p/'nginx.conf').write_text(render((p/'base.conf').read_text(),'example.com',sys.argv[3],[sys.argv[2]+'/32']))
 PY
 docker run -d --name "$test_id-nginx" --network "$test_id" --network-alias nginx --memory 128m \
   -v "$task_root/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
@@ -57,7 +57,7 @@ python3 - "$task_root" "$trusted_ip" proxied <<'PY'
 import sys
 from pathlib import Path
 from render import render
-p=Path(sys.argv[1]); (p/'nginx.conf').write_text(render((p/'base.conf').read_text(),'bbs.example.com',sys.argv[3],[sys.argv[2]+'/32']))
+p=Path(sys.argv[1]); (p/'nginx.conf').write_text(render((p/'base.conf').read_text(),'example.com',sys.argv[3],[sys.argv[2]+'/32']))
 PY
 docker exec "$test_id-nginx" nginx -t
 docker exec "$test_id-nginx" nginx -s reload

@@ -8,7 +8,7 @@
 
 管理员用户名为 `melon_admin`，随机初始密码通过本机 `outputs/melon-server-admin.txt` 私密文件交付。ECS 使用 Node 24、Next.js standalone、SQLite 和磁盘图片存储，数据位于 `/opt/melon/data`。部署、重启、备份及更新步骤见 [ECS 维护说明](deploy/README.md)。本地与服务器数据各自独立。
 
-Cloudflare 接入工具已准备，详见 [接入包与验收步骤](deploy/cloudflare/README.md)。当前尚未购买域名，因此还未开启 Cloudflare 代理，线上继续使用上述 IP 地址。
+Cloudflare 接入工具已准备，详见 [接入包与验收步骤](deploy/cloudflare/README.md)。已购买根域名 `gua4u.cn`，备案仍在进行；根路径候选版本已准备，尚未切换 DNS、证书或生产入口。详见 [域名接入验收记录](deploy/cloudflare/VERIFICATION-ROOT.md)。
 
 ## 启动
 

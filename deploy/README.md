@@ -1,6 +1,6 @@
 # ECS 部署
 
-Cloudflare 免费代理接入准备及分阶段操作见 [Cloudflare 接入包](cloudflare/README.md)。当前尚未购买域名，生产仍使用原 IP 入口。
+Cloudflare 免费代理接入准备及分阶段操作见 [Cloudflare 接入包](cloudflare/README.md)。根域名 `gua4u.cn` 已购买、备案待完成；根路径候选版本已准备，生产仍使用原 IP 入口。见 [本次验收记录](cloudflare/VERIFICATION-ROOT.md)。
 
 本项目同时保留原 Vinext/Worker 本地运行方式，并提供 Next.js standalone / Node 24 的 ECS 生产方式。生产使用 `node:sqlite`（WAL、外键、5 秒 busy timeout）与磁盘图片目录。事务适配层保证帖子与图片关联批量写入原子性。
 
@@ -36,7 +36,7 @@ sudo sh /opt/melon/backup-ecs.sh
 ## 更新与回退
 
 1. 上传不含 `node_modules`、本地数据、输出文件、环境文件、密钥的源代码到新的 `releases/<版本>/`。
-2. `sudo docker build --network host -f deploy/Dockerfile -t melon-community:<版本> .`。
+2. 旧入口构建：`sudo docker build --network host --build-arg BASE_PATH=/melon -f deploy/Dockerfile -t melon-community:<版本> .`。根域名候选构建改用 `--build-arg BASE_PATH=`，必须与运行时空 `MELON_BASE_PATH` 一致；路径切换只能使用 Cloudflare 接入包的协调激活流程。
 3. 先备份数据，再修改 `/opt/melon/.env` 中镜像版本，执行 `sudo docker compose up -d`。
 4. 检查健康端点、登录和页面。仅在新版本迁移与旧版本兼容时直接切回旧镜像。
 5. 首次部署若需移除入口，从 Nginx 配置移除 `BEGIN melon-community` 到 `END melon-community` 区块；先 `nginx -t`，再平滑 reload。不要直接覆盖其他应用的后续配置更新。

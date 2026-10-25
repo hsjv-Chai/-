@@ -11,7 +11,9 @@ RUN npm run build:ecs
 
 FROM node:24-alpine AS runtime
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000 MELON_DATA_DIR=/data NEXT_PUBLIC_BASE_PATH=/melon
+ARG BASE_PATH=/melon
+LABEL io.melon.base-path=${BASE_PATH}
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000 MELON_DATA_DIR=/data NEXT_PUBLIC_BASE_PATH=${BASE_PATH}
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public

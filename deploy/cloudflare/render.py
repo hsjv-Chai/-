@@ -60,7 +60,7 @@ def replace_block(text, begin, end, replacement):
 
 
 def cache_rules(host):
-    static = '(starts_with(http.request.uri.path, "/melon/_next/static/") and (ends_with(http.request.uri.path, ".js") or ends_with(http.request.uri.path, ".css")))'
+    static = '(starts_with(http.request.uri.path, "/_next/static/") and (ends_with(http.request.uri.path, ".js") or ends_with(http.request.uri.path, ".css")))'
     return [
         {'ref': 'melon_static_v1', 'description': 'Melon: versioned JS/CSS only',
          'expression': f'(http.host eq "{host}" and {static} and http.request.method in {{"GET" "HEAD"}})',
@@ -96,14 +96,13 @@ server {{
 }}
 {END}
 '''
-    old_route = f'''{OLD_BEGIN}
-  location ~ ^/melon(?:/|$) {{
+    legacy = f'''  location ~ ^/melon(?:/|$) {{
     default_type application/json;
     add_header Cache-Control "no-store" always;
     if ($request_method !~ ^(GET|HEAD)$) {{ return 410 '{{"error":"论坛已迁移，请打开新域名后重试"}}'; }}
-    return 302 https://{host}$request_uri;
-  }}
-{OLD_END}'''
+    return 302 https://{host}$melon_legacy_target;
+  }}'''
+    old_route = OLD_BEGIN + '\n' + legacy + '\n' + OLD_END
     base = replace_block(base, OLD_BEGIN, OLD_END, old_route)
     nets = '\n'.join(f'  {ipaddress.ip_network(cidr)} 1;' for cidr in ranges)
     trusts = '\n'.join(f'  set_real_ip_from {ipaddress.ip_network(cidr)};' for cidr in ranges)
@@ -111,6 +110,12 @@ server {{
     return base.rstrip() + f'''
 
 {BEGIN}
+# Use the raw URI so escaped paths and query strings survive the redirect.
+map $request_uri $melon_legacy_target {{
+  default /;
+  ~^/melon(?<melon_legacy_tail>/.*)$ $melon_legacy_tail;
+  ~^/melon(?<melon_legacy_query>\\?.*)$ /$melon_legacy_query;
+}}
 # Evaluate the socket peer, not the client IP rewritten by ngx_http_realip_module.
 geo $realip_remote_addr $melon_cf_peer {{
   default 0;
@@ -118,12 +123,12 @@ geo $realip_remote_addr $melon_cf_peer {{
 }}
 map "$request_method:$uri" $melon_auth_key {{
   default "";
-  ~^POST:/melon/api/auth/(login|register)/?$ $binary_remote_addr;
+  ~^POST:/api/auth/(login|register)/?$ $binary_remote_addr;
 }}
 limit_req_zone $melon_auth_key zone=melon_auth:10m rate=10r/m;
 map "$uri:$upstream_status" $melon_response_cache {{
   default "private, no-store";
-  ~^/melon/_next/static/.*\\.(js|css):(200|304)$ "public, max-age=31536000, immutable";
+  ~^/_next/static/.*\\.(js|css):(200|304)$ "public, max-age=31536000, immutable";
 }}
 log_format melon_cf '$time_iso8601 host=$host peer=$realip_remote_addr client=$remote_addr '
                     '"$request" status=$status ray=$http_cf_ray';
@@ -131,7 +136,8 @@ server {{
   listen 80;
   server_name {host};
   location ^~ /.well-known/acme-challenge/ {{ root /var/www/acme; }}
-  location / {{ return 301 https://{host}$request_uri; }}
+{legacy}
+  location / {{ return 308 https://{host}$request_uri; }}
 }}
 server {{
   listen 443 ssl;
@@ -156,9 +162,9 @@ server {{
     add_header Retry-After 60 always;
     return 429 '{{"error":"请求过于频繁，请稍后再试"}}';
   }}
-  location = / {{ return 302 /melon/; }}
+{legacy}
   location ^~ /.well-known/acme-challenge/ {{ root /var/www/acme; }}
-  location ~ ^/melon(?:/|$) {{
+  location / {{
     limit_req zone=melon_auth burst=10 nodelay;
     limit_req_status 429;
     resolver 127.0.0.11 valid=10s ipv6=off;
@@ -175,7 +181,6 @@ server {{
     proxy_send_timeout 60s;
     proxy_buffering off;
   }}
-  location / {{ return 404; }}
 }}
 {END}
 '''
@@ -202,7 +207,7 @@ def main():
     }
     for name, content in payloads.items():
         (args.output / name).write_text(content + '\n')
-    manifest = {'host': host, 'mode': args.mode, 'origin_ip': ORIGIN_IP,
+    manifest = {'host': host, 'mode': args.mode, 'origin_ip': ORIGIN_IP, 'base_path': '',
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'created_epoch': datetime.now(timezone.utc).timestamp(), 'ranges': ranges,
                 'base_sha256': digest(base),

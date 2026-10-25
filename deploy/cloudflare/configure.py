@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from readiness import load_readiness
 from render import ORIGIN_IP, cache_rules, hostname, reserved_host
 
 PHASE = 'http_request_cache_settings'
@@ -29,6 +30,10 @@ def merge_rules(existing, desired):
     return merged
 
 
+def host_in_zone(host, zone):
+    return host == zone or host.endswith('.' + zone)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--host', required=True)
@@ -36,10 +41,16 @@ def main():
     p.add_argument('--action', choices=['dns-direct', 'edge', 'proxy-on', 'proxy-off'], required=True)
     p.add_argument('--snapshot-dir', type=Path, required=True)
     p.add_argument('--apply', action='store_true')
+    p.add_argument('--readiness', type=Path, help='Private approved filing/contact record; required with --apply')
     args = p.parse_args()
     host = hostname(args.host)
     if reserved_host(host):
         p.error('Supply the purchased hostname, not an example.')
+    if args.apply:
+        try:
+            load_readiness(args.readiness, host)
+        except (ValueError, OSError) as error:
+            p.error(str(error))
     cf = os.environ.get('CF_BIN') or shutil.which('cf') or str(Path.home() / '.local/bin/cf')
 
     def call(command, body=None, mutation=False):
@@ -52,8 +63,8 @@ def main():
         return json.loads(result.stdout) if result.stdout.strip() else None
 
     zone = call(['zones', 'get'])
-    if zone['status'] != 'active' or not host.endswith('.' + zone['name']):
-        p.error('Hostname must be a subdomain of the selected active zone.')
+    if zone['status'] != 'active' or not host_in_zone(host, zone['name']):
+        p.error('Hostname must equal or be a subdomain of the selected active zone.')
     records = call(['dns', 'records', 'list', '--name', host, '--per-page', '100'])
     if len(records) >= 100:
         p.error('DNS listing may be incomplete; inspect manually.')

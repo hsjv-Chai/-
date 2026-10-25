@@ -1,6 +1,6 @@
 import unittest
 from render import cache_rules, hostname, render, reserved_host
-from configure import merge_rules
+from configure import merge_rules, host_in_zone
 
 BASE = '''server {
   listen 443 ssl;
@@ -20,6 +20,20 @@ class ConfigurationTests(unittest.TestCase):
                 hostname(value)
         self.assertTrue(reserved_host('bbs.example.com'))
         self.assertEqual(hostname('BBS.Valid-domain.COM'), 'bbs.valid-domain.com')
+
+    def test_apex_and_zone_boundaries(self):
+        self.assertTrue(host_in_zone('gua4u.cn', 'gua4u.cn'))
+        self.assertTrue(host_in_zone('bbs.gua4u.cn', 'gua4u.cn'))
+        for host in ('evilgua4u.cn', 'gua4u.cn.evil.net', 'other.cn'):
+            self.assertFalse(host_in_zone(host, 'gua4u.cn'))
+        config = render(BASE, 'gua4u.cn', 'direct', ['173.245.48.0/20'])
+        self.assertIn('server_name gua4u.cn;', config)
+        self.assertIn('return 302 https://gua4u.cn$melon_legacy_target;', config)
+        self.assertNotIn('return 302 /melon/', config)
+        self.assertIn('~^POST:/api/auth/', config)
+        self.assertIn('~^/_next/static/', config)
+        self.assertIn('"/_next/static/"', cache_rules('gua4u.cn')[0]['expression'])
+        self.assertNotIn('/melon/_next/', str(cache_rules('gua4u.cn')))
 
     def test_missing_and_duplicate_marker_refused(self):
         for text in ('server {}', BASE + BASE):
