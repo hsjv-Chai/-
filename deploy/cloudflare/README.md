@@ -4,7 +4,7 @@
 
 文中的 `example.com`、`192.0.2.10` 和服务器路径均为示例，不代表实际部署信息。示例域名会被生产激活器拒绝；使用前须替换为自己的配置，并核对部署脚本中绑定的路径、网络、容器名及源站地址。下列命令是操作模板，不能直接用于任意服务器。
 
-域名启用后需重新登录，Cookie 使用 `/`、Secure、HttpOnly、SameSite=Lax。测试覆盖范围见 [根路径验收记录](VERIFICATION-ROOT.md)。
+域名启用后需重新登录，Cookie 使用 `/`、Secure、HttpOnly、SameSite=Lax。测试覆盖范围见 [根路径验收记录](../../docs/verification/root-domain.md)。
 
 ## 上线条件与私密配置
 

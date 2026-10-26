@@ -8,9 +8,17 @@
 
 - [ECS 部署与维护](deploy/README.md)
 - [Cloudflare 接入说明](deploy/cloudflare/README.md)
-- [根路径接入测试记录](deploy/cloudflare/VERIFICATION-ROOT.md)
+- [根路径接入测试记录](docs/verification/root-domain.md)
 
 公开文档使用示例域名和通用配置。实际访问地址、账户、联系方式、备案资料和运维记录应保存在私密配置中，不提交到仓库。
+
+## 开发导航
+
+- [架构与目录分工](docs/architecture.md)：从页面到 API、数据库的调用关系及两套运行环境。
+- [开发与验证指南](docs/development.md)：本地启动、隔离测试、构建及贡献约定。
+- 模块入口：[社区前端](components/community/README.md) · [社区服务端](lib/community/README.md) · [牌室](lib/games/README.md) · [种瓜](lib/garden/README.md)。
+- [测试索引](tests/README.md) · [本次整理验收](docs/verification/project-structure.md)。
+- `beta/` 保留历史快照，仅供参考；当前开发以以上模块为准。
 
 ## 启动
 
@@ -61,7 +69,7 @@ npm run build
 npm run test:integration
 ```
 
-集成测试通过本地 API 创建两个临时账户，检查账户、发帖、图片、引用、点赞、输入错误、越权、管理及分页；测试结束清理专用测试数据。它会在测试账户上临时授予管理权限，不改变其他账户角色。浏览器验证结果见 `VERIFICATION.md`。
+集成测试通过本地 API 创建两个临时账户，检查账户、发帖、图片、引用、点赞、输入错误、越权、管理及分页；测试结束清理专用测试数据。它会在测试账户上临时授予管理权限，不改变其他账户角色。历史验证结果见 [验证记录](docs/verification/history.md)。
 
 首版不包含私信、匿名、关注、通知、外部热榜、密码找回或完整举报审核。生产部署应配置 HTTPS、容器重启策略与定期备份。
 
@@ -71,10 +79,10 @@ npm run test:integration
 
 ## 牌室
 
-导航新增“牌室”：真人斗地主与完整升级掼蛋，支持邀请朋友、准备开局、贡还牌、断线重进和超时处理。详见 [牌室使用与规则说明](CARD_ROOM.md)。新增迁移仅增加房间表；ECS 启动自动迁移，本地 Worker 模式运行 `npm run db:migrate`。
+导航新增“牌室”：真人斗地主与完整升级掼蛋，支持邀请朋友、准备开局、贡还牌、断线重进和超时处理。详见 [牌室使用与规则说明](docs/features/card-room.md)。新增迁移仅增加房间表；ECS 启动自动迁移，本地 Worker 模式运行 `npm run db:migrate`。
 
 ## 种瓜
 
 每日签到让瓜苗成长，累计七天自动收获一颗西瓜。漏签保留进度，收获记录仅本人可见。根路径部署入口为 `/garden`；使用 `/melon` 前缀时为 `/melon/garden/`，首页和导航也可进入。沿用现有账户，无积分兑换或牌室奖励。
 
-迁移 `0002_narrow_blob` 只新增签到表；ECS 启动自动应用，本地 Worker 模式运行 `npm run db:migrate`。执行 `npm run test:garden` 检查成长与日期规则；隔离接口及真实重启测试步骤见 [种瓜说明](GARDEN.md)。
+迁移 `0002_narrow_blob` 只新增签到表；ECS 启动自动应用，本地 Worker 模式运行 `npm run db:migrate`。执行 `npm run test:garden` 检查成长与日期规则；隔离接口及真实重启测试步骤见 [种瓜说明](docs/features/garden.md)。

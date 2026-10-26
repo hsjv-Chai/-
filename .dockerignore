@@ -11,3 +11,5 @@ outputs
 *.pem
 *.tsbuildinfo
 examples
+
+beta

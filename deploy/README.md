@@ -52,4 +52,4 @@ docker compose logs --tail 100 app
 4. 从 `/melon` 切到根路径时，必须协调更新镜像、运行参数、同源配置、Cookie 和反代，使用 [根路径接入流程](cloudflare/README.md)。
 5. 回退需恢复匹配的镜像与配置，不使用旧数据库覆盖更新后的用户数据。Nginx 使用单文件挂载时应保留文件 inode。
 
-玩法与迁移说明：[牌室](../CARD_ROOM.md)、[种瓜](../GARDEN.md)。测试覆盖范围：[验证记录](../VERIFICATION.md)、[根路径测试](cloudflare/VERIFICATION-ROOT.md)。
+玩法与迁移说明：[牌室](../docs/features/card-room.md)、[种瓜](../docs/features/garden.md)。测试覆盖范围：[验证记录](../docs/verification/history.md)、[根路径测试](../docs/verification/root-domain.md)。
