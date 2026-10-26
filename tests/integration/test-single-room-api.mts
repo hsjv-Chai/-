@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID, createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
-import { createState, type Phase } from '../lib/games/engine.ts';
+import { createState, type Phase } from '../../lib/games/engine.ts';
 
 const base = process.env.MELON_TEST_URL || 'http://127.0.0.1:5175';
 const directory = resolve(process.env.MELON_DATA_DIR || '');

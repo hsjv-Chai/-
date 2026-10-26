@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { gardenDate, gardenState, type CheckIn } from '../lib/garden/model.ts';
+import { gardenDate, gardenState, type CheckIn } from '../../lib/garden/model.ts';
 const time = (s: string) => Date.parse(s + 'T12:00:00+08:00');
 const rows = (...days: string[]): CheckIn[] => days.map(day => ({ day, created_at: time(day) }));
 test('Beijing midnight, month, year and leap day boundaries', () => {

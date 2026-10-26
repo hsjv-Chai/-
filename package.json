@@ -16,15 +16,15 @@
     "db:migrate": "node scripts/local-db.mjs",
     "db:seed": "node scripts/seed.mjs",
     "admin": "node scripts/create-admin.mjs",
-    "test:integration": "node scripts/test-integration.mjs",
+    "test:integration": "node tests/integration/test-integration.mjs",
     "build:ecs": "next build --webpack",
     "start:ecs": "next start",
     "init:ecs": "node scripts/init-ecs.mjs",
-    "test:ecs": "MELON_STORAGE=node node scripts/test-integration.mjs",
-    "test:games": "node --experimental-strip-types --test scripts/test-games.mts",
-    "test:single-room": "node --experimental-strip-types scripts/test-single-room-api.mts",
-    "test:garden": "node --experimental-strip-types --test scripts/test-garden.mts",
-    "test:garden-api": "node --experimental-strip-types scripts/test-garden-api.mts"
+    "test:ecs": "MELON_STORAGE=node node tests/integration/test-integration.mjs",
+    "test:games": "node --experimental-strip-types --test tests/unit/test-games.mts",
+    "test:single-room": "node --experimental-strip-types tests/integration/test-single-room-api.mts",
+    "test:garden": "node --experimental-strip-types --test tests/unit/test-garden.mts",
+    "test:garden-api": "node --experimental-strip-types tests/integration/test-garden-api.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

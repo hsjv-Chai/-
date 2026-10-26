@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
-import { sql, sqlQuote as q, wrangler } from "./local-db.mjs";
+import { sql, sqlQuote as q, wrangler } from "../../scripts/local-db.mjs";
 const base = process.env.MELON_TEST_URL || "http://127.0.0.1:5173";
 const tag = "qa_" + Date.now();
 let checks = 0;
@@ -113,7 +113,7 @@ try {
     A,
     413,
   );
-  const png = readFileSync(".sites-runtime/seed/demo-image-4.png");
+  const png = readFileSync(new URL("../fixtures/image.png", import.meta.url));
   const upload = await request("uploads", "POST", form(png), A, 201);
   uploads.push(upload.id);
   await request("uploads/" + upload.id, "GET", undefined, B, 404);

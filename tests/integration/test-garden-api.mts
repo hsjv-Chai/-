@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { join, resolve } from 'node:path';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
-import { gardenDate } from '../lib/garden/model.ts';
+import { gardenDate } from '../../lib/garden/model.ts';
 const base = process.env.MELON_TEST_URL || 'http://127.0.0.1:5173/melon';
 const directory = resolve(process.env.MELON_DATA_DIR || '');
 if (!['127.0.0.1', 'localhost'].includes(new URL(base).hostname) || !directory.includes('garden-qa')) throw new Error('Requires an isolated loopback garden-qa database');

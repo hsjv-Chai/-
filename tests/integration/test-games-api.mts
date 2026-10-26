@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {sortCards,weight} from '../lib/games/cards.ts';
+import {sortCards,weight} from '../../lib/games/cards.ts';
 const base=process.env.MELON_TEST_URL||'http://127.0.0.1:5173/melon';
 if(!['127.0.0.1','localhost'].includes(new URL(base).hostname)||!process.env.MELON_DATA_DIR?.includes('card-room-qa'))throw new Error('Requires an isolated local card-room-qa database');
 const db=new DatabaseSync(join(process.env.MELON_DATA_DIR,'melon.sqlite'));

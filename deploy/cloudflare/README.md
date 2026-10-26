@@ -154,6 +154,6 @@ node --test deploy/cloudflare/test-verify.mjs
 cd deploy/cloudflare && sudo sh test-proxy.sh
 ```
 
-应用根路径还可在独立 Node 数据目录运行 `scripts/test-root-domain.mjs`。要求 loopback URL、目录名包含 `root-domain-qa`，服务器配置 HTTPS 正式来源；测试检查根 Cookie、同源保护、静态资源和运行时备案页脚。它不验证真实公网 TLS。自签名证书、示例域名和测试备案号只用于隔离夹具，生产脚本拒绝示例域名。
+应用根路径还可在独立 Node 数据目录运行 `tests/integration/test-root-domain.mjs`。要求 loopback URL、目录名包含 `root-domain-qa`，服务器配置 HTTPS 正式来源；测试检查根 Cookie、同源保护、静态资源和运行时备案页脚。它不验证真实公网 TLS。自签名证书、示例域名和测试备案号只用于隔离夹具，生产脚本拒绝示例域名。
 
 参考：[严格回源](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)、[缓存规则](https://developers.cloudflare.com/cache/how-to/cache-rules/create-api/)、[官方网段](https://developers.cloudflare.com/fundamentals/concepts/cloudflare-ip-addresses/)。

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {patterns,beats,deck,type Card,type GameKind} from '../lib/games/cards.ts';
-import {createState,applyAction,publicState,dealRound,allowedExchange,type GameState} from '../lib/games/engine.ts';
+import {patterns,beats,deck,type Card,type GameKind} from '../../lib/games/cards.ts';
+import {createState,applyAction,publicState,dealRound,allowedExchange,type GameState} from '../../lib/games/engine.ts';
 let cardId=200;
 const cards=(ranks:number[],suit=0):Card[]=>ranks.map(rank=>({id:cardId++,rank,suit}));
 const has=(ranks:number[],kind:string,game:GameKind='doudizhu',level=2)=>patterns(cards(ranks),game,level).find(p=>p.kind===kind);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync,unlinkSync,existsSync} from 'node:fs';
 import {join} from 'node:path';
-import {nodeStorage,openConnection,dataDir} from '../lib/node-storage.mjs';
+import {nodeStorage,openConnection,dataDir} from '../../lib/node-storage.mjs';
 const file=join(dataDir(),'.deployment-qa.json'),base='http://127.0.0.1:3000/melon';
 let state={cookie:''};
 async function call(path,method='GET',body){const r=await fetch(base+'/api/'+path,{method,headers:{Origin:process.env.MELON_PUBLIC_ORIGIN,Cookie:state.cookie,...(body instanceof FormData?{}:{'Content-Type':'application/json'})},body:body instanceof FormData?body:body?JSON.stringify(body):undefined});assert.ok(r.ok,`${path}: ${r.status}`);if(r.headers.has('set-cookie')){const raw=r.headers.get('set-cookie');assert.ok(raw.includes('Secure')&&raw.includes('HttpOnly')&&raw.includes('Path=/melon'));state.cookie=raw.split(';')[0];}return r.headers.get('content-type')?.includes('application/json')?r.json():new Uint8Array(await r.arrayBuffer());}
