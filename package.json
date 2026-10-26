@@ -24,7 +24,11 @@
     "test:games": "node --experimental-strip-types --test tests/unit/test-games.mts",
     "test:single-room": "node --experimental-strip-types tests/integration/test-single-room-api.mts",
     "test:garden": "node --experimental-strip-types --test tests/unit/test-garden.mts",
-    "test:garden-api": "node --experimental-strip-types tests/integration/test-garden-api.mts"
+    "test:garden-api": "node --experimental-strip-types tests/integration/test-garden-api.mts",
+    "test:boundaries": "node --test tests/unit/test-module-boundaries.mjs",
+    "test:api-routing": "node tests/integration/test-api-routing.mjs",
+    "test:games-api": "node --experimental-strip-types tests/integration/test-games-api.mts",
+    "test:root-domain": "node tests/integration/test-root-domain.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
