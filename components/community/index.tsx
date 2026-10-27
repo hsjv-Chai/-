@@ -9,8 +9,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { type User, type Category, type Post } from "./types";
 import { useData } from "./use-data";
 import { api } from "./client";
-import { Header, Sidebar, DiscussionSidebar } from "./layout";
-import { ArrowUpRight, Plus, Check } from "lucide-react";
+import { Header, Sidebar, DiscussionSidebar, MobileNavigation } from "./layout";
+import { Check } from "lucide-react";
+import { Welcome } from "./welcome";
 import { Feed } from "./feed";
 import { PostDetail } from "./post-detail";
 import { Editor } from "./editor";
@@ -129,71 +130,14 @@ function App() {
             />
           ) : isHome ? (
             <>
-              <section className="hero">
-                <div className="hero-copy">
-                  <div className="eyebrow">
-                    <span /> THE DAILY SLICE{" "}
-                    <span className="issue">VOL. 001</span>
-                  </div>
-                  <h1>
-                    新鲜事，
-                    <br />
-                    切一块聊聊<span>。</span>
-                  </h1>
-                  <p>
-                    从热闹的话题，到生活的小事。
-                    <br />
-                    在这里，找到和你一样好奇的人。
-                  </p>
-                  <button
-                    onClick={() => needUser(() => navigate("/new"))}
-                    className="hero-link"
-                  >
-                    今天，你想聊什么？ <ArrowUpRight size={18} />
-                  </button>
-                </div>
-                <div className="hero-art" aria-hidden="true">
-                  <span className="art-star star-one">✳</span>
-                  <div className="fruit-shadow" />
-                  <div className="melon">
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <div className="small-melon">
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <span className="art-caption">
-                    fresh thoughts,
-                    <br />
-                    good company.
-                  </span>
-                  <span className="art-star star-two">✧</span>
-                  <span className="art-label">100% 新鲜讨论</span>
-                </div>
-              </section>
-              <Garden
-                key={user?.id ?? "guest"}
+              <Welcome
+                categories={categories.data || []}
+                activeCategory={category}
                 user={user}
                 ready={authReady}
                 login={askLogin}
-                compact
+                compose={() => needUser(() => navigate("/new"))}
               />
-              <div className="welcome-strip">
-                <span>
-                  <span className="live-dot" /> 让好奇心在这里碰头
-                </span>
-                <span>
-                  {stats.data?.users ?? "—"} 位瓜友 ·{" "}
-                  {stats.data?.replies ?? "—"} 次交流 <ArrowUpRight size={13} />
-                </span>
-              </div>
               <Feed
                 key={params.toString()}
                 params={params.toString()}
@@ -247,15 +191,19 @@ function App() {
             </Empty>
           )}
         </main>
-        <DiscussionSidebar isGames={isGames} hot={hot} featured={featured} />
+        <DiscussionSidebar
+          isGames={isGames}
+          hot={hot}
+          featured={featured}
+          stats={stats}
+        />
       </div>
-      <button
-        className={"button mobile-compose" + (isGames ? " games-hide" : "")}
-        onClick={() => needUser(() => navigate("/new"))}
-      >
-        <Plus size={18} />
-        发布话题
-      </button>
+      <MobileNavigation
+        isHome={isHome}
+        isGames={isGames}
+        isGarden={isGarden}
+        compose={() => needUser(() => navigate("/new"))}
+      />
       {auth && (
         <AuthModal
           mode={auth}

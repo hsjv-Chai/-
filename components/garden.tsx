@@ -88,7 +88,7 @@ export default function Garden({ user, ready, login, compact = false }: Props) {
   </button>;
   const feedback = <><div className="garden-message" role="status" aria-live="polite">{message}</div>{error && <div className="garden-error" role="alert">{error} <button className="text-link" onClick={() => void load()}>重新加载</button></div>}</>;
   if (compact) return <section className={"garden-home" + (celebrate ? " garden-celebrate" : "")} aria-label="每日种瓜">
-    <span className="garden-home-icon" aria-hidden="true">{celebrate ? "🍉" : "🌱"}</span><div><a href={appPath('/garden/')}><strong>每天种一点，日子甜一点。</strong><ArrowUpRight size={15}/></a><p>{data ? `已种 ${data.totalDays} 天 · 收获 ${data.harvestCount} 颗西瓜` : '累计种瓜 7 天，收获一颗小西瓜。'}</p></div>
+    <span className="garden-home-icon" aria-hidden="true">{celebrate ? "🍉" : "🌱"}</span><div><a href={appPath('/garden/')}><strong>种瓜 · 每日签到</strong><ArrowUpRight size={15}/></a><p>{data ? `已种 ${data.totalDays} 天 · 收获 ${data.harvestCount} 颗西瓜` : '累计种瓜 7 天，收获一颗小西瓜。'}</p></div>
     {button}{(error || message) && <div className="garden-home-feedback">{feedback}</div>}
   </section>;
   return <div className={'garden-page' + (celebrate ? ' garden-celebrate' : '')}>
