@@ -28,7 +28,10 @@
     "test:boundaries": "node --test tests/unit/test-module-boundaries.mjs",
     "test:api-routing": "node tests/integration/test-api-routing.mjs",
     "test:games-api": "node --experimental-strip-types tests/integration/test-games-api.mts",
-    "test:root-domain": "node tests/integration/test-root-domain.mjs"
+    "test:root-domain": "node tests/integration/test-root-domain.mjs",
+    "test:accounts": "node --experimental-strip-types --test tests/unit/test-registration-ip.mts",
+    "test:accounts-api": "node --experimental-strip-types tests/integration/test-accounts-api.mts",
+    "test:accounts-persistence": "node --experimental-strip-types tests/integration/test-accounts-persistence.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

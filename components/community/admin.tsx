@@ -6,6 +6,7 @@ import { useState } from "react";
 import { api } from "./client";
 import { Loading, ErrorBox, relative, Link } from "./display";
 import { Sparkles, Pin, Eye, ArrowUpRight } from "lucide-react";
+import { Accounts } from "./accounts";
 
 export function Admin({
   user,
@@ -56,6 +57,10 @@ export function Admin({
       <p className="muted">给好讨论一个更显眼的位置。最多置顶 3 条。</p>
       <div className="profile-tabs">
         <button
+          className={tab === "users" ? "active" : ""}
+          onClick={() => setTab("users")}
+        >账号</button>
+        <button
           className={tab === "posts" ? "active" : ""}
           onClick={() => setTab("posts")}
         >
@@ -69,7 +74,7 @@ export function Admin({
         </button>
       </div>
       <ErrorBox message={error} />
-      {loading && !data ? (
+      {tab === "users" ? <Accounts admin={user} version={version} refresh={refresh} notify={notify}/> : loading && !data ? (
         <Loading />
       ) : tab === "posts" ? (
         data?.posts.map((p) => (

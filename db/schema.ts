@@ -5,19 +5,76 @@ import {
   primaryKey,
   index,
 } from "drizzle-orm/sqlite-core";
-export const users = sqliteTable("users", {
+export const users = sqliteTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    username: text("username").notNull().unique(),
+    nickname: text("nickname").notNull(),
+    password: text("password").notNull(),
+    role: text("role").notNull().default("member"),
+    createdAt: integer("created_at").notNull(),
+    registrationIp: text("registration_ip"),
+    accountStatus: text("account_status").notNull().default("active"),
+    restrictedRoomId: text("restricted_room_id"),
+    banReason: text("ban_reason"),
+    bannedAt: integer("banned_at"),
+    accountVersion: integer("account_version").notNull().default(0),
+  },
+  (t) => [index("users_registration_ip_idx").on(t.registrationIp, t.createdAt)],
+);
+export const registrationAlerts = sqliteTable("registration_alerts", {
   id: text("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  nickname: text("nickname").notNull(),
-  password: text("password").notNull(),
-  role: text("role").notNull().default("member"),
+  ip: text("ip").notNull(),
+  windowStart: integer("window_start").notNull(),
   createdAt: integer("created_at").notNull(),
+  accountCount: integer("account_count").notNull(),
 });
+export const registrationAlertUsers = sqliteTable(
+  "registration_alert_users",
+  {
+    alertId: text("alert_id")
+      .notNull()
+      .references(() => registrationAlerts.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.alertId, t.userId] }),
+    index("registration_alert_user_idx").on(t.userId),
+  ],
+);
+export const accountAudit = sqliteTable(
+  "account_audit",
+  {
+    id: text("id").primaryKey(),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => users.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    action: text("action").notNull(),
+    reason: text("reason").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("account_audit_user_idx").on(t.userId, t.createdAt)],
+);
 export const sessions = sqliteTable("sessions", {
   token: text("token").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
+  expires: integer("expires").notNull(),
+});
+// These are read-only final-result receipts, never authentication sessions.
+export const gameResultReceipts = sqliteTable("game_result_receipts", {
+  token: text("token").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  roomId: text("room_id").notNull(),
   expires: integer("expires").notNull(),
 });
 export const categories = sqliteTable("categories", {
@@ -90,19 +147,34 @@ export const authAttempts = sqliteTable("auth_attempts", {
   count: integer("count").notNull(),
   expires: integer("expires").notNull(),
 });
-export const gameRooms = sqliteTable('game_rooms', {
-  id: text('id').primaryKey(),
-  ownerId: text('owner_id').notNull().references(() => users.id),
-  game: text('game').notNull(),
-  phase: text('phase').notNull(),
-  state: text('state').notNull(),
-  version: integer('version').notNull().default(0),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
-}, t => [index('game_rooms_updated_idx').on(t.updatedAt), index('game_rooms_owner_idx').on(t.ownerId, t.createdAt)]);
+export const gameRooms = sqliteTable(
+  "game_rooms",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id),
+    game: text("game").notNull(),
+    phase: text("phase").notNull(),
+    state: text("state").notNull(),
+    version: integer("version").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    index("game_rooms_updated_idx").on(t.updatedAt),
+    index("game_rooms_owner_idx").on(t.ownerId, t.createdAt),
+  ],
+);
 
-export const gardenCheckIns = sqliteTable('garden_check_ins', {
-  userId: text('user_id').notNull().references(() => users.id),
-  day: text('day').notNull(),
-  createdAt: integer('created_at').notNull(),
-}, t => [primaryKey({ columns: [t.userId, t.day] })]);
+export const gardenCheckIns = sqliteTable(
+  "garden_check_ins",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    day: text("day").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day] })],
+);

@@ -14,6 +14,8 @@
 
 ## 开发导航
 
+管理员账号查看、封禁与解封，以及同 IP 集中注册标记，见 [账号管理说明](docs/features/account-management.md)。
+
 - [架构与目录分工](docs/architecture.md)：从页面到 API、数据库的调用关系及两套运行环境。
 - [开发与验证指南](docs/development.md)：本地启动、隔离测试、构建及贡献约定。
 - 模块入口：[社区前端](components/community/README.md) · [社区服务端](lib/community/README.md) · [牌室](lib/games/README.md) · [种瓜](lib/garden/README.md)。

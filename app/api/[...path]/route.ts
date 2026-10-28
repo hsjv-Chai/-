@@ -45,7 +45,8 @@ async function handler(req: Request): Promise<Response> {
         response = await usersAPI(req, key);
         break;
       case "admin":
-        response = await adminAPI(req, key, action);
+        if(parts.length>4)return json({error:"接口不存在"},404);
+        response = await adminAPI(req, key, action,parts[3]);
         break;
       case "categories":
       case "stats":
@@ -55,6 +56,7 @@ async function handler(req: Request): Promise<Response> {
     return response ?? json({ error: "接口不存在" }, 404);
   } catch (error) {
     const e = error as Error & { status?: number };
+    if (e.message.includes("MELON_ACCOUNT_RESTRICTED")) return json({error:"账号已封禁或受限，请联系管理员"},403);
     if (!e.status) console.error(e);
     return json(
       { error: e.status ? e.message : "服务暂时出了点问题，请稍后重试" },

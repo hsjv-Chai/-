@@ -2,7 +2,7 @@
 
 import Garden from "../garden";
 import CardRoom from "../card-room";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { Loading, Empty, Link } from "./display";
 import { stripBasePath, appPath } from "@/lib/paths";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -46,11 +46,19 @@ function App() {
     featured = useData<{ items: Post[] }>("posts?view=featured", version);
   const refresh = () => setVersion((v) => v + 1);
   useEffect(() => {
-    api<{ user: User | null }>("auth/me")
-      .then((d) => setUser(d.user))
-      .catch(() => setUser(null))
-      .finally(() => setAuthReady(true));
-  }, [version]);
+    let active=true;
+    const load=()=>api<{ user: User | null }>("auth/me")
+      .then((d) => {if(active)setUser(d.user);})
+      .catch(() => {if(active)setUser(null);})
+      .finally(() => {if(active)setAuthReady(true);});
+    void load();
+    // The game owns its final-result handoff so a background auth refresh cannot erase it.
+    if(pathname==='/games'||pathname.startsWith('/games/'))return()=>{active=false;};
+    const timer=setInterval(load,30000);
+    window.addEventListener('focus',load);
+    return()=>{active=false;clearInterval(timer);window.removeEventListener('focus',load);};
+  }, [version,pathname]);
+  const endGameSession=useCallback(()=>setUser(null),[]);
   useEffect(() => {
     setMobileMenu(false);
     setSearch(params.get("q") || "");
@@ -113,6 +121,10 @@ function App() {
           pathname={pathname}
         />
         <main className="main">
+          {user?.account_status === "restricted" && <div className="account-notice" role="status">
+            <strong>账号已受限</strong><p>{user.ban_reason}。论坛、种瓜及新牌局操作已暂停。当前整场牌局结束后退出登录。</p>
+            {user.restricted_room_id && <Link href={"/games/"+user.restricted_room_id}>返回当前牌局</Link>}
+          </div>}
           {isGarden ? (
             <Garden
               key={user?.id ?? "guest"}
@@ -123,6 +135,7 @@ function App() {
           ) : isGames ? (
             <CardRoom
               key={pathname}
+              onSessionEnded={endGameSession}
               roomId={slug[1]}
               user={user}
               ready={authReady}

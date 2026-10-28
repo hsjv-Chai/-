@@ -1,14 +1,17 @@
 import { all, one, run, json, fail, requireAdmin, body } from "@/lib/server";
+import { accountsAPI } from "./accounts";
 
 export async function adminAPI(
   req: Request,
   key?: string,
   action?: string,
+  section?: string,
 ): Promise<Response | undefined> {
   const method = req.method;
 
-  await requireAdmin(req);
-  if (method === "GET") {
+  const admin=await requireAdmin(req);
+  if(key === "users")return accountsAPI(req,admin,action,section);
+  if (method === "GET" && !key) {
     return json({
       posts: await all(
         "SELECT p.*,u.nickname FROM posts p JOIN users u ON u.id=p.user_id ORDER BY p.created_at DESC",

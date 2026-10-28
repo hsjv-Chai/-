@@ -1604,3 +1604,169 @@ a:focus-visible {
 .auth-dialog label {
   color: #776c87;
 }
+
+/* Account administration */
+.account-notice {
+  padding: 18px 20px;
+  border: 1px solid #e7d4a3;
+  background: #fff9e8;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  color: #685223;
+  overflow-wrap: anywhere;
+}
+.account-notice p {
+  margin: 8px 0;
+}
+.account-notice a,
+.account-notice button {
+  color: #6550b0;
+  font-weight: 700;
+  margin-left: 8px;
+}
+.account-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+  align-items: center;
+}
+.account-filters label:first-child {
+  flex: 1;
+  min-width: 160px;
+}
+.account-filters input,
+.account-filters select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: white;
+  color: inherit;
+}
+.account-item {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.account-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.account-heading h3 {
+  font-size: 17px;
+  margin: 0;
+  flex: 1;
+}
+.account-heading small {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.account-status {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.status-active {
+  color: #347b53;
+  background: #eaf5ed;
+}
+.status-restricted {
+  color: #8a651e;
+  background: #fff1cf;
+}
+.status-banned {
+  color: #a14855;
+  background: #fcebf0;
+}
+.account-meta {
+  display: flex;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin: 16px 0;
+}
+.account-meta dt {
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.account-meta dd {
+  margin: 0;
+}
+.registration-warning {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff6e8;
+  color: #875f2a;
+  font-size: 13px;
+}
+.registration-warning svg {
+  flex: none;
+}
+.registration-warning p {
+  margin: 6px 0;
+}
+.account-reason {
+  font-size: 13px;
+  color: var(--muted);
+}
+.account-history {
+  background: var(--canvas, #f6f4fa);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 16px;
+  font-size: 12px;
+}
+.account-history h4 {
+  margin-top: 0;
+}
+.account-history > div {
+  padding: 8px 0;
+}
+.account-history p {
+  margin: 6px 0;
+}
+.account-pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  font-size: 12px;
+}
+.account-pagination .button {
+  padding: 10px 14px;
+  min-height: 40px;
+}
+.auth-dialog textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  resize: vertical;
+}
+@media (max-width: 480px) {
+  .account-filters label:last-child {
+    width: 100%;
+  }
+  .account-meta {
+    display: grid;
+    gap: 10px;
+  }
+  .account-pagination {
+    gap: 6px;
+  }
+  .account-pagination .button {
+    padding: 8px;
+  }
+  .account-item {
+    padding: 20px 0;
+  }
+}

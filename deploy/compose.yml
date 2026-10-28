@@ -9,6 +9,7 @@ services:
       MELON_PUBLIC_ORIGIN: ${MELON_PUBLIC_ORIGIN:-https://114.215.182.66}
       NEXT_PUBLIC_BASE_PATH: ${MELON_BASE_PATH-/melon}
       MELON_ICP_NUMBER: ${MELON_ICP_NUMBER-}
+      MELON_CLIENT_IP_SOURCE: nginx
     volumes:
       - /opt/melon/data:/data
     ports:

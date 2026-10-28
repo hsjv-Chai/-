@@ -11,6 +11,7 @@
 | `post-detail.tsx`、`lightbox.tsx` | 正文、回复、引用、点赞与图片查看 |
 | `editor.tsx` | 新建/编辑、Markdown 预览、图片上传 |
 | `auth-modal.tsx`、`profile.tsx`、`admin.tsx` | 账户弹窗、个人页、管理操作 |
+| `accounts.tsx` | 管理员账号搜索、筛选、封禁确认及审计记录 |
 | `client.ts`、`use-data.ts` | 社区 HTTP 请求及可取消结果更新的数据加载 Hook |
 | `types.ts`、`display.tsx` | 页面展示类型、链接、头像和通用状态 |
 
