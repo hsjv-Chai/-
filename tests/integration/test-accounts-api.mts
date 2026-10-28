@@ -1,3 +1,4 @@
+import {testFetch as fetch} from "../helpers/verified-registration.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";

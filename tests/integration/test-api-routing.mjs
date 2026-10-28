@@ -1,3 +1,4 @@
+import {testFetch as fetch} from "../helpers/verified-registration.mjs";
 // Exercise the real HTTP entrypoint, including async errors from extracted handlers.
 import assert from "node:assert/strict";
 const base = process.env.MELON_TEST_URL || "http://127.0.0.1:5173";

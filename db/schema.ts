@@ -20,8 +20,51 @@ export const users = sqliteTable(
     banReason: text("ban_reason"),
     bannedAt: integer("banned_at"),
     accountVersion: integer("account_version").notNull().default(0),
+    email: text("email"),
+    emailCanonical: text("email_canonical"),
+    emailVerifiedAt: integer("email_verified_at"),
   },
-  (t) => [index("users_registration_ip_idx").on(t.registrationIp, t.createdAt)],
+  (t) => [
+    index("users_registration_ip_idx").on(t.registrationIp, t.createdAt),
+    index("users_email_idx").on(t.emailCanonical),
+  ],
+);
+export const emailQuotas = sqliteTable("email_quotas", {
+  canonical: text("canonical").primaryKey(),
+  registeredCount: integer("registered_count").notNull().default(0),
+});
+export const emailSendAttempts = sqliteTable(
+  "email_send_attempts",
+  {
+    id: text("id").primaryKey(),
+    canonical: text("canonical").notNull(),
+    ip: text("ip"),
+    day: text("day").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("email_attempt_canonical_idx").on(t.canonical, t.createdAt),
+    index("email_attempt_ip_idx").on(t.ip, t.createdAt),
+    index("email_attempt_day_idx").on(t.day),
+  ],
+);
+export const emailChallenges = sqliteTable(
+  "email_challenges",
+  {
+    id: text("id").primaryKey(),
+    canonical: text("canonical").notNull(),
+    email: text("email").notNull(),
+    username: text("username").notNull(),
+    codeHash: text("code_hash").notNull(),
+    transport: text("transport").notNull(),
+    status: text("status").notNull().default("pending"),
+    wrongAttempts: integer("wrong_attempts").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    consumedBy: text("consumed_by"),
+    consumedAt: integer("consumed_at"),
+  },
+  (t) => [index("email_challenge_canonical_idx").on(t.canonical, t.createdAt)],
 );
 export const registrationAlerts = sqliteTable("registration_alerts", {
   id: text("id").primaryKey(),

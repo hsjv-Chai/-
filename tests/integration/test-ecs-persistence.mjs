@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {randomUUID,pbkdf2Sync} from "node:crypto";
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -46,11 +47,10 @@ async function call(path, method = "GET", body) {
 if (process.argv[2] === "prepare") {
   assert.ok(!existsSync(file), "A pending test already exists");
   const username = "qa_ecs_" + Date.now();
-  await call("auth/register", "POST", {
-    username,
-    nickname: "部署验证临时用户",
-    password: "OnlyForDeployment_8231",
-  });
+  // Test persistence with a legacy fixture; new verified signup is tested separately.
+  const salt=randomUUID(),password="OnlyForDeployment_8231";
+  openConnection().prepare("INSERT INTO users(id,username,nickname,password,role,created_at) VALUES(?,?,?,?,?,?)").run(randomUUID(),username,"部署验证临时用户",salt+":"+pbkdf2Sync(password,salt,100000,32,"sha256").toString("hex"),"member",Date.now());
+  await call("auth/login", "POST", {username,password});
   state.user = (await call("auth/me")).user.id;
   writeFileSync(file, JSON.stringify(state), { mode: 0o600 });
   const png = readFileSync(new URL("../fixtures/image.png", import.meta.url)),

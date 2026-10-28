@@ -1,3 +1,4 @@
+import {testFetch as fetch} from "../helpers/verified-registration.mjs";
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { sql, sqlQuote as q, wrangler } from "../../scripts/local-db.mjs";

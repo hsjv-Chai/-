@@ -1,5 +1,7 @@
+import {testFetch as fetch} from "../helpers/verified-registration.mjs";
 // Run against a disposable root-path server with MELON_PUBLIC_ORIGIN=https://example.com.
 import assert from "node:assert/strict";
+import {randomUUID,pbkdf2Sync} from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { join, resolve } from "node:path";
 const base = process.env.MELON_TEST_URL;
@@ -85,11 +87,10 @@ try {
     403,
     "https://192.0.2.10",
   );
-  const { r } = await api("auth/register", "POST", {
-    username,
-    nickname: "域名隔离测试",
-    password: "Root_Domain_Qa_2026",
-  });
+  // A legacy account checks root cookie/origin behavior without weakening new-signup verification.
+  const salt=randomUUID();userId=randomUUID();
+  db.prepare('INSERT INTO users(id,username,nickname,password,role,created_at) VALUES(?,?,?,?,?,?)').run(userId,username,'域名隔离测试',salt+':'+pbkdf2Sync('Root_Domain_Qa_2026',salt,100000,32,'sha256').toString('hex'),'member',Date.now());
+  const {r}=await api('auth/login','POST',{username,password:'Root_Domain_Qa_2026'});
   const raw = r.headers.get("set-cookie") || "";
   check(/(?:^|;\s*)Path=\/(?:;|$)/.test(raw), "cookie root scope");
   check(

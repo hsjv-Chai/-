@@ -4,6 +4,8 @@ export type User = {
   nickname: string;
   role: string;
   created_at?: number;
+  email?: string | null;
+  email_verified_at?: number | null;
   account_status?: "active" | "restricted" | "banned";
   restricted_room_id?: string | null;
   ban_reason?: string | null;
@@ -16,6 +18,8 @@ export type ManagedAccount = User & {
   suspicious_at: number | null;
   suspicious_count: number | null;
   alert_id: string | null;
+  email_canonical: string | null;
+  email_account_count: number;
 };
 
 export type Category = {

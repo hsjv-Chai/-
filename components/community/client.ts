@@ -14,6 +14,11 @@ export async function api<T = any>(
     },
   });
   const data: any = await response.json();
-  if (!response.ok) throw new Error(data.error || "请求失败，请稍后再试");
+  if (!response.ok)
+    throw Object.assign(new Error(data.error || "请求失败，请稍后再试"), {
+      status: response.status,
+      retryAfter:
+        data.retryAfter || Number(response.headers.get("Retry-After")) || 0,
+    });
   return data;
 }

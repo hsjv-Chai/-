@@ -1,3 +1,4 @@
+import { normalizeEmail } from "@/lib/email/model";
 import {
   all,
   one,
@@ -25,7 +26,7 @@ type Account = {
   banned_at: number | null;
   account_version: number;
 };
-const columns = `u.id,u.username,u.nickname,u.role,u.created_at,u.registration_ip,u.account_status,u.restricted_room_id,u.ban_reason,u.banned_at,u.account_version`;
+const columns = `u.id,u.username,u.nickname,u.role,u.created_at,u.registration_ip,u.account_status,u.restricted_room_id,u.ban_reason,u.banned_at,u.account_version,u.email,u.email_canonical,u.email_verified_at,COALESCE((SELECT registered_count FROM email_quotas WHERE canonical=u.email_canonical),0) AS email_account_count`;
 const alertColumns = `a.created_at AS suspicious_at,a.account_count AS suspicious_count,a.id AS alert_id`;
 const latestAlert = `LEFT JOIN registration_alerts a ON a.id=(SELECT au.alert_id FROM registration_alert_users au JOIN registration_alerts x ON x.id=au.alert_id WHERE au.user_id=u.id ORDER BY x.created_at DESC,x.id DESC LIMIT 1)`;
 function pageOf(req: Request) {
@@ -79,8 +80,19 @@ export async function accountsAPI(
       alert = params.get("alert") || "";
     if (!["", "active", "restricted", "banned", "suspicious"].includes(filter))
       fail("账号筛选条件不正确");
+    const emailFilter = params.get("email") || "";
     const clauses: string[] = [],
       values: unknown[] = [];
+    if (emailFilter) {
+      let canonical;
+      try {
+        canonical = normalizeEmail(emailFilter).canonical;
+      } catch {
+        fail("请填写有效邮箱");
+      }
+      clauses.push("u.email_canonical=?");
+      values.push(canonical);
+    }
     if (query) {
       clauses.push(
         "(u.username LIKE ? ESCAPE '\\' OR u.nickname LIKE ? ESCAPE '\\')",

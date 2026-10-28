@@ -29,6 +29,13 @@
       "when": 1793161101366,
       "tag": "0003_account_management",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793168925027,
+      "tag": "0004_mature_patch",
+      "breakpoints": true
     }
   ]
 }

@@ -188,7 +188,8 @@ export function Accounts({
   refresh: () => void;
   notify: (s: string) => void;
 }) {
-  const [query, setQuery] = useState(""),
+  const [emailFilter, setEmailFilter] = useState(""),
+    [query, setQuery] = useState(""),
     [search, setSearch] = useState(""),
     [status, setStatus] = useState(""),
     [page, setPage] = useState(1),
@@ -197,6 +198,7 @@ export function Accounts({
     [history, setHistory] = useState("");
   const params = new URLSearchParams({
     q: search,
+    ...(emailFilter ? { email: emailFilter } : {}),
     status,
     page: String(page),
     ...(alert ? { alert } : {}),
@@ -267,6 +269,20 @@ export function Accounts({
           </button>
         </div>
       )}
+      {emailFilter && (
+        <div className="account-notice">
+          同邮箱账号：{emailFilter}
+          <button
+            className="text-link"
+            onClick={() => {
+              setEmailFilter("");
+              setPage(1);
+            }}
+          >
+            清除邮箱筛选
+          </button>
+        </div>
+      )}
       <ErrorBox message={error} />
       {loading ? (
         <Loading />
@@ -294,6 +310,37 @@ export function Accounts({
                 <dt>注册 IP</dt>
                 <dd>{u.registration_ip || "未知"}</dd>
               </div>
+              <div>
+                <dt>注册邮箱</dt>
+                <dd>{u.email || "历史账号，未绑定邮箱"}</dd>
+              </div>
+              {u.email_verified_at && (
+                <div>
+                  <dt>邮箱验证时间</dt>
+                  <dd>{date(u.email_verified_at)}</dd>
+                </div>
+              )}
+              {u.email && (
+                <div>
+                  <dt>邮箱累计账号</dt>
+                  <dd>
+                    {u.email_account_count} / 10{" "}
+                    <button
+                      className="text-link"
+                      onClick={() => {
+                        setEmailFilter(u.email_canonical!);
+                        setAlert("");
+                        setSearch("");
+                        setQuery("");
+                        setStatus("");
+                        setPage(1);
+                      }}
+                    >
+                      查看同邮箱账号
+                    </button>
+                  </dd>
+                </div>
+              )}
             </dl>
             {u.suspicious_at && (
               <div className="registration-warning">

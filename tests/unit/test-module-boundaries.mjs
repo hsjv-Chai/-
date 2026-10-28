@@ -58,7 +58,7 @@ test("client modules cannot reach storage or server handlers through runtime imp
     visited.add(file);
     const path = relative(root, file).replaceAll("\\", "/");
     assert.ok(
-      !/^lib\/(server\.ts|community\/|storage-|node-storage\.mjs|(?:games|garden)\/api\.ts)/.test(
+      !/^lib\/(server\.ts|community\/|email\/(?:provider|service)\.ts|storage-|node-storage\.mjs|(?:games|garden)\/api\.ts)/.test(
         path,
       ),
       `client reaches ${path}`,

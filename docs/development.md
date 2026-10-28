@@ -22,11 +22,11 @@ npm run dev -- --hostname 127.0.0.1
 
 ## Node 隔离接口环境
 
-以下路径只用于自动化测试，不能指向真实站点数据。目录名同时满足牌室与种瓜脚本的隔离保护。
+以下路径只用于自动化测试，不能指向真实站点数据。普通生产构建不支持模拟发信；新注册接口回归使用下一节的开发模式隔离环境。旧账号登录、根路径、来源与持久化契约可使用正式构建验证。
 
 ```sh
 export MELON_STORAGE=node
-export MELON_DATA_DIR="$PWD/.sites-runtime/card-room-qa-garden-qa-structure"
+export MELON_DATA_DIR="$PWD/.sites-runtime/email-qa-account-qa-card-room-qa-garden-qa"
 export MELON_PUBLIC_ORIGIN=http://127.0.0.1:5181
 export MELON_TEST_URL=http://127.0.0.1:5181/melon
 export NEXT_PUBLIC_BASE_PATH=/melon
@@ -35,17 +35,50 @@ npm run build:ecs
 npm run start:ecs -- --hostname 127.0.0.1 --port 5181
 ```
 
-在另一个终端设置相同环境后运行接口测试。构建产物只能同时服务一种前缀；修改前缀前停止预览，重新构建再启动。standalone 镜像启动方式见部署文档，以上是本机测试入口。
+构建产物只能同时服务一种前缀；修改前缀前停止预览，重新构建再启动。standalone 镜像启动方式见部署文档，以上是本机测试入口。
+
+## 邮箱验证隔离测试
+
+单元测试无需发信账号或联网：
 
 ```sh
+npm run test:email
+```
+
+接口回归必须使用专用目录和回环开发服务，不能指向真实站点数据或构建后生产预览。以下变量同时设置在服务终端与测试终端；示例 HMAC 仅用于可丢弃的本地夹具。
+
+```sh
+export MELON_STORAGE=node
+export MELON_DATA_DIR="$PWD/.sites-runtime/email-qa-account-qa-card-room-qa-garden-qa"
+export MELON_CLIENT_IP_SOURCE=nginx
+export MELON_PUBLIC_ORIGIN=http://127.0.0.1:5189
+export MELON_TEST_URL=http://127.0.0.1:5189/melon
+export NEXT_PUBLIC_BASE_PATH=/melon
+export MELON_MAIL_PROVIDER=preview
+export MELON_EMAIL_HMAC_SECRET=Local_Only_Email_Test_Secret_000000000
+export MELON_EMAIL_TEST_OUTBOX=1
+node scripts/init-ecs.mjs
+node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 5189
+```
+
+在测试终端运行以下命令。模拟收件箱写入该目录的 `uploads/mail-preview-<challengeId>`，仅供测试脚本或开发者本地读取，公开图片接口不可访问。禁止把内容写入日志或提交 Git；该模式仅在非生产、明确配置的回环来源启用。
+
+```sh
+npm run test:email-api
 npm run test:integration
 npm run test:api-routing
+npm run test:accounts-api
 npm run test:single-room
 npm run test:games-api
 npm run test:garden-api
 # 实际停止并重启服务，仍使用同一个数据目录，然后执行：
+npm run test:email-api -- --after-restart
 npm run test:garden-api -- --after-restart
 ```
+
+`test:email-api` 在最后保留一个未消费验证码，十分钟内重启并执行第二阶段。模拟收件箱只用于开发；生产明确拒绝模拟发信和模拟生成的挑战记录。真实投递测试需显式配置阿里云并获得收件人许可，不能对任意邮箱运行自动化脚本。
+
+生产拒绝契约用独立的 `email-production-qa` 目录：先初始化并运行正式构建，运行时故意设置 `MELON_MAIL_PROVIDER=preview`、测试 HMAC 和 HTTPS 示例来源，AccessKey 和发信地址全部留空。使用回环 URL、同一数据目录和 `MELON_MAIL_PROVIDER=preview` 执行 `npm run test:email-production`。这是检查生产禁止模拟模式的夹具，预期发码为 503；不能拿它作为可注册的生产配置。
 
 接口测试会创建临时账户、修改测试数据并清理。`test:integration` 的 SQL 操作使用所选存储，不提供生产环境保护，因此必须使用隔离目录；不要仅凭 URL 判断数据库是否安全。所有测试顺序执行，避免共享测试数据库时相互干扰。
 
@@ -64,6 +97,7 @@ npm run test:garden-api -- --after-restart
 ```sh
 npm run test:games
 npm run test:garden
+npm run test:email
 npm run test:boundaries
 npm run typecheck
 npm run build

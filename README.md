@@ -9,16 +9,18 @@
 - [ECS 部署与维护](deploy/README.md)
 - [Cloudflare 接入说明](deploy/cloudflare/README.md)
 - [根路径接入测试记录](docs/verification/root-domain.md)
+- [注册验证码邮件配置](deploy/mail/README.md)
 
 公开文档使用示例域名和通用配置。实际访问地址、账户、联系方式、备案资料和运维记录应保存在私密配置中，不提交到仓库。
 
 ## 开发导航
 
 管理员账号查看、封禁与解封，以及同 IP 集中注册标记，见 [账号管理说明](docs/features/account-management.md)。
+新注册需要邮箱验证码，每个规范化邮箱累计最多十个账号；历史账号继续正常登录。见 [邮箱注册说明](docs/features/email-registration.md)。
 
 - [架构与目录分工](docs/architecture.md)：从页面到 API、数据库的调用关系及两套运行环境。
 - [开发与验证指南](docs/development.md)：本地启动、隔离测试、构建及贡献约定。
-- 模块入口：[社区前端](components/community/README.md) · [社区服务端](lib/community/README.md) · [牌室](lib/games/README.md) · [种瓜](lib/garden/README.md)。
+- 模块入口：[社区前端](components/community/README.md) · [社区服务端](lib/community/README.md) · [邮箱验证](lib/email/README.md) · [牌室](lib/games/README.md) · [种瓜](lib/garden/README.md)。
 - [测试索引](tests/README.md) · [本次整理验收](docs/verification/project-structure.md)。
 - `beta/` 保留历史快照，仅供参考；当前开发以以上模块为准。
 
@@ -40,6 +42,7 @@ npm run dev -- --hostname 127.0.0.1
 ## 使用与管理
 
 网页右上角注册：用户名 3–24 位英文字母、数字或下划线；昵称 2–20 字；密码 8–128 字符。游客可阅读，登录后可发帖、回复和点赞。
+新注册还需邮箱、六位验证码和验证码请求标识。需先按 [邮件接入说明](deploy/mail/README.md) 配置发信；开发测试可使用 [本地模拟发信](docs/development.md#邮箱验证隔离测试)，生产及构建预览不能使用模拟模式。发信不可用时保留旧账号登录，不能绕过邮箱验证注册。
 
 先注册，再在本地终端授予管理员权限：
 
@@ -66,12 +69,13 @@ npm run admin -- your_username
 
 ```sh
 npm run typecheck
+npm run test:email
 npm run build
-# 先启动本地服务，再执行；可指定 MELON_TEST_URL
+# 按开发指南启动隔离测试服务并设置邮件测试环境后执行
 npm run test:integration
 ```
 
-集成测试通过本地 API 创建两个临时账户，检查账户、发帖、图片、引用、点赞、输入错误、越权、管理及分页；测试结束清理专用测试数据。它会在测试账户上临时授予管理权限，不改变其他账户角色。历史验证结果见 [验证记录](docs/verification/history.md)。
+集成测试通过本地 API 创建临时账户，检查账户、发帖、图片、引用、点赞、输入错误、越权、管理及分页；测试结束清理专用测试数据。邮件测试适配器仅在显式配置的回环开发服务和独立目录读取模拟验证码，不提供生产注册后门。测试会在测试账户上临时授予管理权限，不改变其他账户角色。运行步骤见 [开发指南](docs/development.md)，历史结果见 [验证记录](docs/verification/history.md)。
 
 首版不包含私信、匿名、关注、通知、外部热榜、密码找回或完整举报审核。生产部署应配置 HTTPS、容器重启策略与定期备份。
 

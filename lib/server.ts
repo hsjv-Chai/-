@@ -9,6 +9,8 @@ export type User = {
   restricted_room_id: string | null;
   ban_reason: string | null;
   account_version: number;
+  email: string | null;
+  email_verified_at: number | null;
 };
 export const db = () => env.DB!;
 export const now = () => Date.now();
@@ -133,7 +135,7 @@ export async function getUser(req: Request): Promise<User | null> {
   const hash = await sha(token);
   const load = () =>
     one<User>(
-      "SELECT u.id,u.username,u.nickname,u.role,u.account_status,u.restricted_room_id,u.ban_reason,u.account_version FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>? AND u.account_status<>'banned'",
+      "SELECT u.id,u.username,u.nickname,u.role,u.account_status,u.restricted_room_id,u.ban_reason,u.account_version,u.email,u.email_verified_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>? AND u.account_status<>'banned'",
       hash,
       now(),
     );

@@ -31,7 +31,11 @@
     "test:root-domain": "node tests/integration/test-root-domain.mjs",
     "test:accounts": "node --experimental-strip-types --test tests/unit/test-registration-ip.mts",
     "test:accounts-api": "node --experimental-strip-types tests/integration/test-accounts-api.mts",
-    "test:accounts-persistence": "node --experimental-strip-types tests/integration/test-accounts-persistence.mts"
+    "test:accounts-persistence": "node --experimental-strip-types tests/integration/test-accounts-persistence.mts",
+    "test:email": "node --import ./tests/helpers/ts-alias-loader.mjs --experimental-strip-types --test tests/unit/test-email.mts",
+    "test:email-api": "node --experimental-strip-types tests/integration/test-email-api.mts",
+    "mail:prepare": "node scripts/prepare-mail-config.mjs",
+    "test:email-production": "node tests/integration/test-email-production.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
