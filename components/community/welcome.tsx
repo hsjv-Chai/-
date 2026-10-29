@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight, MessageCircle, Plus } from "lucide-react";
 import { Link, icons } from "./display";
 import type { Category, User } from "./types";
 import Garden from "../garden";
@@ -24,7 +24,6 @@ export function Welcome({
     <>
       <section className="community-intro">
         <div>
-          <div className="intro-eyebrow">一个有趣的互联网角落</div>
           <h1>
             好瓜，一起聊<span>。</span>
           </h1>
@@ -32,7 +31,6 @@ export function Welcome({
         </div>
         <div className="intro-melon" aria-hidden="true">
           <span>🍉</span>
-          <i>新鲜事，切一块聊聊</i>
         </div>
       </section>
       <nav className="section-cards" aria-label="探索话题分区">
@@ -64,7 +62,7 @@ export function Welcome({
       <div className="home-tools">
         <button className="quick-compose" onClick={compose}>
           <span className="compose-avatar" aria-hidden="true">
-            🍉
+            <MessageCircle size={20} />
           </span>
           <span>今天有什么新鲜事？</span>
           <span className="compose-plus">

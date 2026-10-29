@@ -18,6 +18,7 @@ import { Editor } from "./editor";
 import { Profile } from "./profile";
 import { Admin } from "./admin";
 import { AuthModal } from "./auth-modal";
+import { HomeBoard } from "./home-board";
 
 export default function Community() {
   return (
@@ -92,6 +93,7 @@ function App() {
   }
   return (
     <>
+      <div className={isHome ? "home-v2" : undefined}>
       <Header
         isGames={isGames}
         isGarden={isGarden}
@@ -162,6 +164,7 @@ function App() {
                     : selectedCategory?.name || "话题广场"
                 }
                 version={version}
+                board={<HomeBoard key={params.toString()} compact hot={hot} featured={featured} stats={stats} retry={refresh} />}
               />
             </>
           ) : slug[0] === "p" && slug[1] ? (
@@ -204,12 +207,12 @@ function App() {
             </Empty>
           )}
         </main>
-        <DiscussionSidebar
+        {isHome ? <HomeBoard hot={hot} featured={featured} stats={stats} retry={refresh} /> : <DiscussionSidebar
           isGames={isGames}
           hot={hot}
           featured={featured}
           stats={stats}
-        />
+        />}
       </div>
       <MobileNavigation
         isHome={isHome}
@@ -217,6 +220,7 @@ function App() {
         isGarden={isGarden}
         compose={() => needUser(() => navigate("/new"))}
       />
+      </div>
       {auth && (
         <AuthModal
           mode={auth}

@@ -7,6 +7,7 @@
 | `index.tsx` | 页面容器及社区、牌室、种瓜的装配 |
 | `layout.tsx` | 页头、侧栏、手机底部导航、热榜与精选 |
 | `welcome.tsx` | 首页介绍、手机分区卡片、快速发帖与种瓜入口 |
+| `home-board.tsx`、`home-states.tsx` | 首页桌面/折叠看板、稳定骨架和错误重试；复用容器数据 |
 | `feed.tsx`、`post-row.tsx` | 筛选、分页、帖子列表及列表项 |
 | `post-detail.tsx`、`lightbox.tsx` | 正文、回复、引用、点赞与图片查看 |
 | `editor.tsx` | 新建/编辑、Markdown 预览、图片上传 |
@@ -21,4 +22,4 @@
 
 API 实现在 [社区服务端](../../lib/community/README.md)，回归测试在 `tests/integration/test-integration.mjs` 和 `test-api-routing.mjs`。牌室和种瓜继续使用各自请求与状态管理；此模块仅向它们传入账户、登录入口和就绪状态。
 
-社区工作区视觉样式在 `app/community.css`，基础排版、表单及详情样式在 `app/globals.css`。根布局依次加载基础样式与社区样式；牌室扑克/牌桌和种瓜插画继续使用各自样式模块。
+社区工作区视觉样式在 `app/community.css`，基础排版、表单及详情样式在 `app/globals.css`。根布局依次加载基础、社区和首页样式；`app/home.css` 仅在 `.home-v2` 作用域生效，不修改其他路由主题。首页看板接收父级已有数据，不能自行重复请求。牌室扑克/牌桌和种瓜插画继续使用各自样式模块。设计变量与响应式规则见 [首页 UI 说明](../../docs/features/home-ui.md)。

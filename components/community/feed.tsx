@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
 import { useData } from "./use-data";
 import { type Post } from "./types";
-import { Link, ErrorBox, Loading, Empty } from "./display";
+import { Link, Empty } from "./display";
 import {
   Radio,
   Flame,
@@ -11,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { PostRow } from "./post-row";
+import { HomeLoading, HomeError } from "./home-states";
 
 export function Feed({
   params,
@@ -18,18 +20,21 @@ export function Feed({
   category,
   title,
   version,
+  board,
 }: {
   params: string;
   view: string;
   category: string;
   title: string;
   version: number;
+  board?: ReactNode;
 }) {
+  const [attempt, setAttempt] = useState(0);
   const { data, error, loading } = useData<{
     items: Post[];
     total: number;
     page: number;
-  }>("posts?" + params, version);
+  }>("posts?" + params, version + attempt);
   function tab(v: string) {
     const n = new URLSearchParams(params);
     n.set("view", v);
@@ -43,12 +48,12 @@ export function Feed({
   }
   return (
     <section className="feed">
+      {board}
       <div className="feed-title">
         <h2>
           {title}
           <span>{data?.total ?? "—"}</span>
         </h2>
-        <span className="feed-sub">每一个话题，都是一次相遇</span>
       </div>
       <div className="feed-tabs">
         <nav aria-label="帖子排序">
@@ -57,7 +62,7 @@ export function Feed({
             ["hot", "热门讨论"],
             ["featured", "精选话题"],
           ].map(([v, label]) => (
-            <Link className={view === v ? "active" : ""} key={v} href={tab(v)}>
+            <Link className={view === v ? "active" : ""} aria-current={view === v ? "page" : undefined} key={v} href={tab(v)}>
               {v === "latest" ? (
                 <Radio size={15} />
               ) : v === "hot" ? (
@@ -71,13 +76,16 @@ export function Feed({
         </nav>
         <span className="feed-sort">{category ? "分区话题" : "全部分区"}</span>
       </div>
-      <ErrorBox message={error} />
+      <HomeError message={error} retry={() => setAttempt((n) => n + 1)} />
       {loading ? (
-        <Loading />
+        <HomeLoading />
       ) : data?.items.length ? (
         data.items.map((post) => <PostRow key={post.id} post={post} />)
       ) : !error ? (
-        <Empty title="还没有找到相关话题" />
+        <Empty title={new URLSearchParams(params).get("q") ? "没有找到相关话题" : category ? "这个分区还没有话题" : "第一场讨论，等你开始"}>
+          {new URLSearchParams(params).get("q") ? "试试其他关键词，或返回全部话题。" : "分享一点新鲜见闻，开启这里的第一场讨论。"}
+          {(category || new URLSearchParams(params).get("q")) && <Link className="home-reset" href="/">返回全部话题</Link>}
+        </Empty>
       ) : null}
       {data && data.total > 20 && (
         <nav className="pagination" aria-label="分页">
@@ -100,9 +108,6 @@ export function Feed({
           )}
         </nav>
       )}
-      <div className="feed-end">
-        <span /> 生活有瓜，慢慢聊 <span />
-      </div>
     </section>
   );
 }
