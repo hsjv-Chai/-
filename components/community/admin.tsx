@@ -7,6 +7,7 @@ import { api } from "./client";
 import { Loading, ErrorBox, relative, Link } from "./display";
 import { Sparkles, Pin, Eye, ArrowUpRight } from "lucide-react";
 import { Accounts } from "./accounts";
+import { MuseumAdminList } from "../museum/admin";
 
 export function Admin({
   user,
@@ -54,8 +55,9 @@ export function Admin({
     <section className="admin-card">
       <div className="eyebrow">KEEP THE CONVERSATION GOOD</div>
       <h1>社区管理</h1>
-      <p className="muted">给好讨论一个更显眼的位置。最多置顶 3 条。</p>
+      <p className="muted">{tab === "museum" ? "维护图文展览，保存草稿并预览后公开。" : "给好讨论一个更显眼的位置。最多置顶 3 条。"}</p>
       <div className="profile-tabs">
+        <button className={tab === "museum" ? "active" : ""} onClick={() => setTab("museum")}>博物馆</button>
         <button
           className={tab === "users" ? "active" : ""}
           onClick={() => setTab("users")}
@@ -74,7 +76,7 @@ export function Admin({
         </button>
       </div>
       <ErrorBox message={error} />
-      {tab === "users" ? <Accounts admin={user} version={version} refresh={refresh} notify={notify}/> : loading && !data ? (
+      {tab === "museum" ? <MuseumAdminList user={user} /> : tab === "users" ? <Accounts admin={user} version={version} refresh={refresh} notify={notify}/> : loading && !data ? (
         <Loading />
       ) : tab === "posts" ? (
         data?.posts.map((p) => (

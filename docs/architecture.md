@@ -12,9 +12,11 @@ flowchart TD
   API --> Forum[社区资源处理器]
   API --> Games[牌室 API 与引擎]
   API --> Garden[种瓜 API 与模型]
+  API --> Museum[博物馆草稿 / 公开版本 / 图片]
   Forum --> Shared[身份验证 / 权限 / 数据访问]
   Games --> Shared
   Garden --> Shared
+  Museum --> Shared
   Shared --> Runtime[storage-runtime]
   Runtime --> Node[Node SQLite 与磁盘图片]
   Runtime --> Worker[Worker D1 与 R2 绑定]
@@ -27,7 +29,7 @@ flowchart TD
 | `app/` | 框架页面、布局、样式和薄 API 入口 |
 | `components/community/` | 社区页面及客户端状态；牌室、种瓜组件暂保留在 components 下 |
 | `components/ui/`、`vendor/` | 模板 UI 与第三方样式；不在这里放业务逻辑 |
-| `lib/community/`、`lib/games/`、`lib/garden/` | 业务模块，各自说明入口与测试 |
+| `lib/community/`、`lib/games/`、`lib/garden/`、`lib/museum/` | 业务模块，各自说明入口与测试；博物馆前端独立放在 `components/museum/` |
 | `lib/server.ts` 与存储适配文件 | 服务端共享能力与运行环境边界 |
 | `db/`、`drizzle/` | 数据定义、不可随意重写的已发布迁移 |
 | `tests/unit/`、`tests/integration/`、`tests/fixtures/` | 纯规则、独立数据接口回归、最小测试图片 |

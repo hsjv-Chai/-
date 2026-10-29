@@ -18,6 +18,8 @@ import { Editor } from "./editor";
 import { Profile } from "./profile";
 import { Admin } from "./admin";
 import { AuthModal } from "./auth-modal";
+import { MuseumView } from "../museum/view";
+import { MuseumAdminList, MuseumEditor } from "../museum/admin";
 
 export default function Community() {
   return (
@@ -76,6 +78,7 @@ function App() {
     view = params.get("view") || "latest",
     isHome = pathname === "/",
     isGarden = pathname === "/garden" || pathname === "/garden/",
+    isMuseum = pathname === "/museum" || pathname.startsWith("/museum/") || pathname === "/admin/museum" || pathname.startsWith("/admin/museum/"),
     isGames = pathname === "/games" || pathname.startsWith("/games/"),
     selectedCategory = categories.data?.find((c) => c.id === category);
   const slug = pathname.split("/").filter(Boolean);
@@ -92,10 +95,12 @@ function App() {
   }
   return (
     <>
+      <div className={isMuseum ? "museum-mode" : undefined}>
       <Header
         isGames={isGames}
         isGarden={isGarden}
         isHome={isHome}
+        isMuseum={isMuseum}
         view={view}
         search={search}
         setSearch={setSearch}
@@ -107,7 +112,7 @@ function App() {
         mobileMenu={mobileMenu}
         setMobileMenu={setMobileMenu}
       />
-      <div className={"shell" + (isGames ? " games-shell" : "")}>
+      <div className={"shell" + (isGames ? " games-shell" : "") + (isMuseum ? " museum-shell" : "")}>
         <Sidebar
           isGames={isGames}
           isGarden={isGarden}
@@ -125,7 +130,10 @@ function App() {
             <strong>账号已受限</strong><p>{user.ban_reason}。论坛、种瓜及新牌局操作已暂停。当前整场牌局结束后退出登录。</p>
             {user.restricted_room_id && <Link href={"/games/"+user.restricted_room_id}>返回当前牌局</Link>}
           </div>}
-          {isGarden ? (
+          {isMuseum ? (
+            slug[0] === "admin" ? slug.length === 2 ? <MuseumAdminList user={user} ready={authReady} /> : slug.length === 3 ? <MuseumEditor key={slug[2]} id={slug[2]} user={user} ready={authReady} /> : <Empty title="此管理页面不存在" />
+              : <MuseumView key={pathname + params.toString()} path={slug.slice(1)} params={params.toString()} user={user} ready={authReady} />
+          ) : isGarden ? (
             <Garden
               key={user?.id ?? "guest"}
               user={user}
@@ -205,7 +213,7 @@ function App() {
           )}
         </main>
         <DiscussionSidebar
-          isGames={isGames}
+          isGames={isGames || isMuseum}
           hot={hot}
           featured={featured}
           stats={stats}
@@ -215,8 +223,10 @@ function App() {
         isHome={isHome}
         isGames={isGames}
         isGarden={isGarden}
+        isMuseum={isMuseum}
         compose={() => needUser(() => navigate("/new"))}
       />
+      </div>
       {auth && (
         <AuthModal
           mode={auth}

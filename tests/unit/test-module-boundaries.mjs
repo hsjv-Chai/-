@@ -58,7 +58,7 @@ test("client modules cannot reach storage or server handlers through runtime imp
     visited.add(file);
     const path = relative(root, file).replaceAll("\\", "/");
     assert.ok(
-      !/^lib\/(server\.ts|community\/|email\/(?:provider|service)\.ts|storage-|node-storage\.mjs|(?:games|garden)\/api\.ts)/.test(
+      !/^lib\/(server\.ts|community\/|museum\/(?:admin|public|store|images)\.ts|email\/(?:provider|service)\.ts|storage-|node-storage\.mjs|(?:games|garden)\/api\.ts)/.test(
         path,
       ),
       `client reaches ${path}`,
@@ -74,6 +74,7 @@ test("client modules cannot reach storage or server handlers through runtime imp
   for (const file of files(resolve(root, "components/community"))) walk(file);
   walk(resolve(root, "components/card-room.tsx"));
   walk(resolve(root, "components/garden.tsx"));
+  for (const file of files(resolve(root, "components/museum"))) walk(file);
 });
 test("community dependency graph has no cycles", () => {
   const done = new Set(),
@@ -90,6 +91,6 @@ test("community dependency graph has no cycles", () => {
     stack.pop();
     done.add(file);
   }
-  for (const dir of ["components/community", "lib/community"])
+  for (const dir of ["components/community", "components/museum", "lib/community", "lib/museum"])
     for (const file of files(resolve(root, dir))) walk(file);
 });

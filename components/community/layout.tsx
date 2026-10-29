@@ -19,14 +19,16 @@ import {
   ArrowRight,
   Heart,
   X,
+  Landmark,
 } from "lucide-react";
 
-type NavigationProps = { isGames: boolean; isGarden: boolean; isHome: boolean };
+type NavigationProps = { isGames: boolean; isGarden: boolean; isHome: boolean; isMuseum?: boolean };
 
 export function Header({
   isGames,
   isGarden,
   isHome,
+  isMuseum = false,
   search,
   setSearch,
   navigate,
@@ -99,6 +101,7 @@ export function Header({
           >
             种瓜
           </Link>
+          <Link className={isMuseum ? "active" : ""} href="/museum" aria-current={isMuseum ? "page" : undefined}>博物馆</Link>
         </nav>
         <div className="header-actions">
           {user ? (
@@ -208,6 +211,10 @@ export function Sidebar({
         <span>
           种瓜<small>照料每天的小期待</small>
         </span>
+      </Link>
+      <Link className={"side-link " + (pathname === "/museum" || pathname.startsWith("/museum/") ? "selected" : "")} href="/museum">
+        <span className="nav-symbol"><Landmark size={18} /></span>
+        <span>博物馆<small>在图文之间发现故事</small></span>
       </Link>
       <div className="sidebar-label sections-label">
         话题分区 <span>{categories.data?.length ?? 4}</span>
@@ -395,6 +402,7 @@ export function MobileNavigation({
   isHome,
   isGames,
   isGarden,
+  isMuseum = false,
   compose,
 }: NavigationProps & { compose: () => void }) {
   return (
@@ -410,6 +418,9 @@ export function MobileNavigation({
       <Link className={isGarden ? "active" : ""} href="/garden/">
         <Sprout size={19} />
         <span>种瓜</span>
+      </Link>
+      <Link className={isMuseum ? "active" : ""} href="/museum" aria-current={isMuseum ? "page" : undefined}>
+        <Landmark size={19} /><span>博物馆</span>
       </Link>
       <button onClick={compose}>
         <Plus size={20} />

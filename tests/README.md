@@ -4,6 +4,8 @@
 | --- | --- |
 | `unit/` · `test:games` / `test:garden` | 不启动服务的牌局与日期/成长规则 |
 | `unit/` · `test:boundaries` | 客户端依赖隔离、社区模块无循环依赖 |
+| `unit/` · `test:museum` | 博物馆草稿/发布校验、图片字段限制、旧库迁移兼容 |
+| `integration/` · `test:museum-api` | 策展、原子发布、并发版本冲突、私密图片、权限、分页；实际重启后运行 `--after-restart` |
 | `unit/` · `test:email` | 邮箱归一化、验证码生命周期与并发、累计名额、发送限额及 HTTP 发信适配器 |
 | `integration/` · `test:email-api` | 真实 HTTP 的必填验证、同源、隐私、管理员邮箱筛选；重启后再运行 `--after-restart` |
 | `integration/` · `test:email-production` | 隔离生产构建拒绝模拟发信与注册降级，保留旧账号登录；只用于故意配置 preview 的独立生产夹具 |

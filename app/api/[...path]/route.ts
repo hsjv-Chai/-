@@ -8,6 +8,8 @@ import { uploadsAPI } from "@/lib/community/uploads";
 import { usersAPI } from "@/lib/community/users";
 import { adminAPI } from "@/lib/community/admin";
 import { catalogAPI } from "@/lib/community/catalog";
+import { museumAPI } from "@/lib/museum/public";
+import { museumAdminAPI } from "@/lib/museum/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +24,9 @@ async function handler(req: Request): Promise<Response> {
     if (req.method !== "GET") sameOrigin(req);
     let response: Response | undefined;
     switch (resource) {
+      case "museum":
+        response = await museumAPI(req, parts.slice(1));
+        break;
       case "garden":
         return await gardenAPI(req, parts.slice(1));
       case "games":
@@ -46,6 +51,10 @@ async function handler(req: Request): Promise<Response> {
         response = await usersAPI(req, key);
         break;
       case "admin":
+        if (key === "museum") {
+          response = await museumAdminAPI(req, parts.slice(2));
+          break;
+        }
         if (parts.length > 4) return json({ error: "接口不存在" }, 404);
         response = await adminAPI(req, key, action, parts[3]);
         break;

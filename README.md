@@ -20,7 +20,7 @@
 
 - [架构与目录分工](docs/architecture.md)：从页面到 API、数据库的调用关系及两套运行环境。
 - [开发与验证指南](docs/development.md)：本地启动、隔离测试、构建及贡献约定。
-- 模块入口：[社区前端](components/community/README.md) · [社区服务端](lib/community/README.md) · [邮箱验证](lib/email/README.md) · [牌室](lib/games/README.md) · [种瓜](lib/garden/README.md)。
+- 模块入口：[社区前端](components/community/README.md) · [社区服务端](lib/community/README.md) · [邮箱验证](lib/email/README.md) · [牌室](lib/games/README.md) · [种瓜](lib/garden/README.md) · [博物馆](lib/museum/README.md)。
 - [测试索引](tests/README.md) · [本次整理验收](docs/verification/project-structure.md)。
 - `beta/` 保留历史快照，仅供参考；当前开发以以上模块为准。
 
@@ -92,3 +92,9 @@ npm run test:integration
 每日签到让瓜苗成长，累计七天自动收获一颗西瓜。漏签保留进度，收获记录仅本人可见。根路径部署入口为 `/garden`；使用 `/melon` 前缀时为 `/melon/garden/`，首页和导航也可进入。沿用现有账户，无积分兑换或牌室奖励。
 
 迁移 `0002_narrow_blob` 只新增签到表；ECS 启动自动应用，本地 Worker 模式运行 `npm run db:migrate`。执行 `npm run test:garden` 检查成长与日期规则；隔离接口及真实重启测试步骤见 [种瓜说明](docs/features/garden.md)。
+
+## 博物馆
+
+导航「博物馆」提供主题展览、图文展品、图片放大与分享。管理员在「社区管理 → 博物馆」策展，先保存和预览草稿，再整场发布；编辑草稿不会改变公开版。下架同时撤销专属图片的游客访问。
+
+独立迁移、演示初始化、策展操作与备份回退见 [博物馆说明](docs/features/museum.md)，实现入口见 [博物馆前端](components/museum/README.md) 和 [服务端](lib/museum/README.md)，实际检查见 [验证记录](docs/verification/museum.md)。

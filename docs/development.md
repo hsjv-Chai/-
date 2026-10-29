@@ -43,6 +43,7 @@ npm run start:ecs -- --hostname 127.0.0.1 --port 5181
 
 ```sh
 npm run test:email
+npm run test:museum
 ```
 
 接口回归必须使用专用目录和回环开发服务，不能指向真实站点数据或构建后生产预览。以下变量同时设置在服务终端与测试终端；示例 HMAC 仅用于可丢弃的本地夹具。
@@ -108,6 +109,8 @@ NEXT_PUBLIC_BASE_PATH= npm run build:ecs
 Vinext 与 Next 会写入相同的路由类型缓存；切换后出现缓存型错误时，先用匹配前缀运行 `node node_modules/next/dist/bin/next typegen` 再类型检查，不能通过关闭类型检查解决。
 
 模块边界测试检查客户端是否间接导入服务端存储，以及社区模块是否形成循环引用。Worker 构建还需检查服务端产物没有引入本项目的 Node 文件存储实现。
+
+博物馆的隔离演示、策展步骤见 [博物馆说明](features/museum.md)，`test:museum-api` 的双阶段重启检查见 [验证记录](verification/museum.md)。不要将这些测试指向生产数据目录。
 
 Cloudflare 工具测试保持在 `deploy/cloudflare/`，运行 Python 配置测试及 `test-verify.mjs`。其 Docker/Nginx 测试与实际域名接入不是本地应用回归的一部分。
 

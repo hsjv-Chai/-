@@ -221,3 +221,41 @@ export const gardenCheckIns = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.day] })],
 );
+
+export const museumExhibitions = sqliteTable("museum_exhibitions", {
+  id: text("id").primaryKey(),
+  draft: text("draft").notNull(),
+  revision: integer("revision").notNull().default(0),
+  mutationToken: text("mutation_token"),
+  liveReleaseId: text("live_release_id"),
+  isPublic: integer("is_public").notNull().default(0),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+  publishedAt: integer("published_at"),
+});
+export const museumItems = sqliteTable("museum_items", {
+  id: text("id").primaryKey(),
+  exhibitionId: text("exhibition_id").notNull().references(() => museumExhibitions.id),
+  content: text("content").notNull(),
+  position: integer("position").notNull(),
+  removed: integer("removed").notNull().default(0),
+}, t => [index("museum_items_exhibition_idx").on(t.exhibitionId, t.removed, t.position)]);
+export const museumReleases = sqliteTable("museum_releases", {
+  id: text("id").primaryKey(),
+  exhibitionId: text("exhibition_id").notNull().references(() => museumExhibitions.id),
+  content: text("content").notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+export const museumReleaseItems = sqliteTable("museum_release_items", {
+  releaseId: text("release_id").notNull().references(() => museumReleases.id),
+  itemId: text("item_id").notNull(),
+  position: integer("position").notNull(),
+  content: text("content").notNull(),
+}, t => [primaryKey({columns:[t.releaseId,t.itemId]}), index("museum_release_item_idx").on(t.itemId)]);
+export const museumImages = sqliteTable("museum_images", {
+  id: text("id").primaryKey(),
+  exhibitionId: text("exhibition_id").notNull().references(() => museumExhibitions.id),
+  mime: text("mime").notNull(),
+  createdBy: text("created_by").notNull().references(() => users.id),
+  createdAt: integer("created_at").notNull(),
+});
