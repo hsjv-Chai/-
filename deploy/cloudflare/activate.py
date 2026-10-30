@@ -76,7 +76,7 @@ def check_image(image):
 
 
 def ensure_idle():
-    code = "const {DatabaseSync}=require('node:sqlite');const d=new DatabaseSync('/data/melon.sqlite',{readOnly:true});const r=d.prepare(\"SELECT count(*) AS n FROM game_rooms WHERE phase IN ('bidding','tribute','return','playing') AND updated_at>?\").get(Date.now()-7*86400000);if(r.n){console.error('Active games; activation deferred');process.exit(3)}"
+    code = "const {DatabaseSync}=require('node:sqlite');const d=new DatabaseSync('/data/melon.sqlite',{readOnly:true});const r=d.prepare(\"SELECT count(*) AS n FROM game_rooms WHERE phase IN ('bidding','tribute','return','playing','roundEnd') AND updated_at>?\").get(Date.now()-7*86400000);if(r.n){console.error('Active games; activation deferred');process.exit(3)}"
     run('docker', 'exec', 'melon-app-1', 'node', '-e', code)
 
 

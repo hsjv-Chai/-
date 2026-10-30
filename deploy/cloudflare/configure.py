@@ -12,6 +12,7 @@ from render import ORIGIN_IP, cache_rules, hostname, reserved_host
 
 PHASE = 'http_request_cache_settings'
 PREFIX = ['rulesets', 'account-rulesets']
+RULESET_PAGE_SIZE = 50
 
 
 def merge_rules(existing, desired):
@@ -79,8 +80,8 @@ def main():
     if args.action == 'edge':
         settings = {'ssl': 'strict', 'always_use_https': 'on', 'rocket_loader': 'off'}
         state['settings'] = {name: call(['zones', 'settings', 'get', name]) for name in settings}
-        rulesets = call(PREFIX + ['list', '--per-page', '100'])
-        if len(rulesets) >= 100:
+        rulesets = call(PREFIX + ['list', '--per-page', str(RULESET_PAGE_SIZE)])
+        if len(rulesets) >= RULESET_PAGE_SIZE:
             p.error('Ruleset listing may be incomplete; inspect manually.')
         cache = [r for r in rulesets if r.get('phase') == PHASE and r.get('kind') == 'zone']
         if len(cache) > 1:

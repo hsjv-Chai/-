@@ -6,6 +6,8 @@
 
 域名启用后需重新登录，Cookie 使用 `/`、Secure、HttpOnly、SameSite=Lax。测试覆盖范围见 [根路径验收记录](../../docs/verification/root-domain.md)。
 
+实际根域名与代理发布检查见 [接入验证记录](../../docs/verification/domain-live.md)。共用 Docker 网络时，原站反代应使用其专属容器/服务名称（例如 `original-app:3000`），避免两个 Compose 项目的 `app` 别名发生冲突。
+
 ## 上线条件与私密配置
 
 必须先取得真实备案号、确认阿里云接入完成，再实施以下正式操作。不要因为 DNS 可以解析就判定备案通过。参见 [阿里云备案期间访问要求](https://help.aliyun.com/zh/icp-filing/the-influence-of-the-record-during-the-site-visit)。

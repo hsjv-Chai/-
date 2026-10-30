@@ -31,7 +31,7 @@ http.createServer((req,res)=>{
   res.end(JSON.stringify({ok:true,client:req.headers['x-forwarded-for'],cookie:req.headers.cookie||null}));
 }).listen(3000,'0.0.0.0');
 JS
-docker run -d --name "$test_id-app" --network "$test_id" --network-alias melon-app --network-alias app \
+docker run -d --name "$test_id-app" --network "$test_id" --network-alias melon-app --network-alias app --network-alias moye-app-1 \
   --memory 128m -v "$task_root:/qa:ro" node:24-alpine node /qa/upstream.mjs >/dev/null
 for kind in trusted untrusted; do
   docker run -d --name "$test_id-$kind" --network "$test_id" --memory 128m \

@@ -1,6 +1,12 @@
 import unittest
+import contextlib
+import io
+import json
+import tempfile
+from unittest.mock import patch
+from types import SimpleNamespace
 from render import cache_rules, hostname, render, reserved_host
-from configure import merge_rules, host_in_zone
+from configure import merge_rules, host_in_zone, main, ORIGIN_IP
 
 BASE = '''server {
   listen 443 ssl;
@@ -14,6 +20,36 @@ BASE = '''server {
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_ruleset_api_limit_and_incomplete_listing_fail_closed(self):
+        for full_page in (False, True):
+            mutations = []
+            def api(argv, **kwargs):
+                command = argv[1:]
+                if command[:2] == ['zones', 'get']:
+                    result = {'status': 'active', 'name': 'valid-domain.com'}
+                elif command[:3] == ['dns', 'records', 'list']:
+                    result = [{'type': 'A', 'content': ORIGIN_IP, 'proxied': False}]
+                elif command[:3] == ['zones', 'settings', 'get']:
+                    result = {'value': 'off'}
+                elif command[:3] == ['rulesets', 'account-rulesets', 'list']:
+                    limit = int(command[command.index('--per-page') + 1])
+                    if limit > 50:
+                        raise ValueError('API rejects per_page above 50')
+                    result = [{'id': str(i), 'phase': 'http_request_transform', 'kind': 'zone'} for i in range(50)] if full_page else []
+                else:
+                    mutations.append(command)
+                    self.assertIn('--dry-run', command)
+                    result = {'dry_run': True}
+                return SimpleNamespace(stdout=json.dumps(result))
+            with tempfile.TemporaryDirectory() as directory, patch('sys.argv', ['configure.py', '--host', 'forum.valid-domain.com', '--zone', 'test-zone', '--action', 'edge', '--snapshot-dir', directory]), patch('configure.subprocess.run', side_effect=api), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                if full_page:
+                    with self.assertRaises(SystemExit):
+                        main()
+                    self.assertEqual(mutations, [])
+                else:
+                    main()
+                    self.assertEqual(len(mutations), 4)
+
     def test_host_injection_and_examples(self):
         for value in ('x; return 200;', 'https://bbs.test.com', '../etc/passwd', 'bbs.test.com:443', '*.test.com'):
             with self.assertRaises(ValueError):
