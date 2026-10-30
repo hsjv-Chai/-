@@ -11,6 +11,7 @@
 | `post-detail.tsx`、`lightbox.tsx` | 正文、回复、引用、点赞与图片查看 |
 | `editor.tsx` | 新建/编辑、Markdown 预览、图片上传 |
 | `auth-modal.tsx`、`profile.tsx`、`admin.tsx` | 账户弹窗、个人页、管理操作 |
+| `use-auth-dialog.ts` | 登录注册弹窗的背景滚动锁定、可视窗口适配和关闭后的焦点恢复 |
 | `accounts.tsx` | 管理员账号搜索、筛选、封禁确认及审计记录 |
 | `client.ts`、`use-data.ts` | 社区 HTTP 请求及可取消结果更新的数据加载 Hook |
 | `types.ts`、`display.tsx` | 页面展示类型、链接、头像和通用状态 |
@@ -22,3 +23,5 @@
 API 实现在 [社区服务端](../../lib/community/README.md)，回归测试在 `tests/integration/test-integration.mjs` 和 `test-api-routing.mjs`。牌室和种瓜继续使用各自请求与状态管理；此模块仅向它们传入账户、登录入口和就绪状态。
 
 社区工作区视觉样式在 `app/community.css`，基础排版、表单及详情样式在 `app/globals.css`。根布局依次加载基础样式与社区样式；牌室扑克/牌桌和种瓜插画继续使用各自样式模块。
+
+登录注册弹窗仅由关闭按钮或 Esc 关闭；表单在 `.auth-modal-content` 内滚动，关闭按钮位于滚动区域外。不要给整个 `dialog` 添加点击关闭处理，否则点击内部空白或拖动结束可能丢失表单。滚动适配只作用于 `.auth-modal`，不改变账号管理确认框。验证记录见 [登录注册弹窗滚动修复](../../docs/verification/auth-dialog-scroll.md)。

@@ -1,9 +1,10 @@
 "use client";
-import { useState, useRef, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useId, type FormEvent } from "react";
 import { api } from "./client";
 import { X, LoaderCircle, ArrowRight, Mail } from "lucide-react";
 import { ErrorBox } from "./display";
 import { normalizeEmail } from "@/lib/email/model";
+import { useAuthDialog } from "./use-auth-dialog";
 export function AuthModal({
   mode,
   setMode,
@@ -26,10 +27,11 @@ export function AuthModal({
     [code, setCode] = useState(""),
     [challenge, setChallenge] = useState(""),
     [retryAt, setRetryAt] = useState(0),
-    [time, setTime] = useState(Date.now());
-  const dialog = useRef<HTMLDialogElement>(null);
+    [time, setTime] = useState(() => Date.now());
+  const dialog = useAuthDialog();
+  const titleId = useId();
+  const descriptionId = useId();
   useEffect(() => {
-    dialog.current?.showModal();
     const timer = setInterval(() => setTime(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -103,13 +105,12 @@ export function AuthModal({
   return (
     <dialog
       ref={dialog}
-      className="auth-dialog"
+      className="auth-dialog auth-modal"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       onCancel={(e) => {
-        if (busy || sending) e.preventDefault();
-        else close();
-      }}
-      onClick={(e) => {
-        if (e.target === dialog.current && !busy && !sending) close();
+        e.preventDefault();
+        if (!busy && !sending) close();
       }}
     >
       <button
@@ -120,158 +121,162 @@ export function AuthModal({
       >
         <X size={20} />
       </button>
-      <div className="auth-fruit">🍉</div>
-      <h2>{mode === "login" ? "好久不见，瓜友。" : "留个名字，一起吃瓜。"}</h2>
-      <p>
-        {mode === "login"
-          ? "一点好奇心，一群聊得来的人。"
-          : "验证你的邮箱，让每个名字都有来处。"}
-      </p>
-      <form onSubmit={submit}>
-        <label>
-          用户名
-          <input
-            name="username"
-            required
-            minLength={3}
-            maxLength={24}
-            pattern="[A-Za-z0-9_]+"
-            autoComplete="username"
-            placeholder="3–24 位字母、数字或下划线"
-            value={username}
-            disabled={busy || sending}
-            onChange={(e) => {
-              changed();
-              setUsername(e.target.value);
-            }}
-          />
-        </label>
-        {mode === "register" && (
-          <>
-            <label>
-              昵称
-              <input
-                name="nickname"
-                required
-                minLength={2}
-                maxLength={20}
-                autoComplete="nickname"
-                placeholder="大家怎么称呼你？"
-                value={nickname}
-                disabled={busy}
-                onChange={(e) => setNickname(e.target.value)}
-              />
-            </label>
-            <label>
-              邮箱
-              <input
-                name="email"
-                type="email"
-                required
-                maxLength={254}
-                autoComplete="email"
-                placeholder="用于接收注册验证码"
-                value={email}
-                disabled={busy || sending}
-                onChange={(e) => {
-                  changed();
-                  try {
-                    if (
-                      normalizeEmail(e.target.value).canonical !==
-                      normalizeEmail(email).canonical
-                    )
-                      setRetryAt(0);
-                  } catch {
-                    setRetryAt(0);
-                  }
-                  setEmail(e.target.value);
-                }}
-              />
-            </label>
-            <div className="email-code-row">
+      <div className="auth-modal-content">
+        <div className="auth-fruit">🍉</div>
+        <h2 id={titleId}>
+          {mode === "login" ? "好久不见，瓜友。" : "留个名字，一起吃瓜。"}
+        </h2>
+        <p id={descriptionId}>
+          {mode === "login"
+            ? "一点好奇心，一群聊得来的人。"
+            : "验证你的邮箱，让每个名字都有来处。"}
+        </p>
+        <form onSubmit={submit}>
+          <label>
+            用户名
+            <input
+              name="username"
+              required
+              minLength={3}
+              maxLength={24}
+              pattern="[A-Za-z0-9_]+"
+              autoComplete="username"
+              placeholder="3–24 位字母、数字或下划线"
+              value={username}
+              disabled={busy || sending}
+              onChange={(e) => {
+                changed();
+                setUsername(e.target.value);
+              }}
+            />
+          </label>
+          {mode === "register" && (
+            <>
               <label>
-                邮箱验证码
+                昵称
                 <input
-                  name="code"
+                  name="nickname"
                   required
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  minLength={6}
-                  maxLength={6}
-                  placeholder="6 位数字"
-                  value={code}
+                  minLength={2}
+                  maxLength={20}
+                  autoComplete="nickname"
+                  placeholder="大家怎么称呼你？"
+                  value={nickname}
                   disabled={busy}
-                  onChange={(e) =>
-                    setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
+                  onChange={(e) => setNickname(e.target.value)}
                 />
               </label>
-              <button
-                className="button secondary"
-                type="button"
-                disabled={busy || sending || remaining > 0}
-                onClick={send}
-              >
-                {sending ? (
-                  <LoaderCircle className="spin" size={16} />
-                ) : (
-                  <Mail size={16} />
-                )}{" "}
-                {sending
-                  ? "发送中…"
-                  : remaining > 0
-                    ? `${remaining} 秒后重发`
-                    : challenge
-                      ? "重新获取"
-                      : "获取验证码"}
-              </button>
-            </div>
-            <small className="email-quota-note">
-              每个邮箱累计最多注册 10 个账号；Gmail 常见别名共用名额。
-            </small>
-          </>
-        )}
-        <label>
-          密码
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            maxLength={128}
-            autoComplete={
-              mode === "login" ? "current-password" : "new-password"
-            }
-            placeholder="至少 8 个字符"
-            value={password}
-            disabled={busy}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {notice && mode === "register" && (
-          <p className="email-code-notice" role="status">
-            {notice}
-          </p>
-        )}
-        <ErrorBox message={error} />
-        <button className="button full" disabled={busy || sending}>
-          {busy && <LoaderCircle className="spin" size={17} />}{" "}
-          {mode === "login" ? "登录，加入讨论" : "验证并注册"}
-          <ArrowRight size={16} />
-        </button>
-      </form>
-      <div className="auth-switch">
-        {mode === "login" ? "还没有账号？" : "已经有账号？"}
-        <button
-          disabled={busy || sending}
-          onClick={() => {
-            setError("");
-            setMode(mode === "login" ? "register" : "login");
-          }}
-        >
-          {mode === "login" ? "来这里注册" : "直接登录"}
-        </button>
+              <label>
+                邮箱
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={254}
+                  autoComplete="email"
+                  placeholder="用于接收注册验证码"
+                  value={email}
+                  disabled={busy || sending}
+                  onChange={(e) => {
+                    changed();
+                    try {
+                      if (
+                        normalizeEmail(e.target.value).canonical !==
+                        normalizeEmail(email).canonical
+                      )
+                        setRetryAt(0);
+                    } catch {
+                      setRetryAt(0);
+                    }
+                    setEmail(e.target.value);
+                  }}
+                />
+              </label>
+              <div className="email-code-row">
+                <label>
+                  邮箱验证码
+                  <input
+                    name="code"
+                    required
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    minLength={6}
+                    maxLength={6}
+                    placeholder="6 位数字"
+                    value={code}
+                    disabled={busy}
+                    onChange={(e) =>
+                      setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
+                  />
+                </label>
+                <button
+                  className="button secondary"
+                  type="button"
+                  disabled={busy || sending || remaining > 0}
+                  onClick={send}
+                >
+                  {sending ? (
+                    <LoaderCircle className="spin" size={16} />
+                  ) : (
+                    <Mail size={16} />
+                  )}{" "}
+                  {sending
+                    ? "发送中…"
+                    : remaining > 0
+                      ? `${remaining} 秒后重发`
+                      : challenge
+                        ? "重新获取"
+                        : "获取验证码"}
+                </button>
+              </div>
+              <small className="email-quota-note">
+                每个邮箱累计最多注册 10 个账号；Gmail 常见别名共用名额。
+              </small>
+            </>
+          )}
+          <label>
+            密码
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={8}
+              maxLength={128}
+              autoComplete={
+                mode === "login" ? "current-password" : "new-password"
+              }
+              placeholder="至少 8 个字符"
+              value={password}
+              disabled={busy}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          {notice && mode === "register" && (
+            <p className="email-code-notice" role="status">
+              {notice}
+            </p>
+          )}
+          <ErrorBox message={error} />
+          <button className="button full" disabled={busy || sending}>
+            {busy && <LoaderCircle className="spin" size={17} />}{" "}
+            {mode === "login" ? "登录，加入讨论" : "验证并注册"}
+            <ArrowRight size={16} />
+          </button>
+        </form>
+        <div className="auth-switch">
+          {mode === "login" ? "还没有账号？" : "已经有账号？"}
+          <button
+            disabled={busy || sending}
+            onClick={() => {
+              setError("");
+              setMode(mode === "login" ? "register" : "login");
+            }}
+          >
+            {mode === "login" ? "来这里注册" : "直接登录"}
+          </button>
+        </div>
       </div>
     </dialog>
   );
