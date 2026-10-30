@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import type { User, Category, Post } from "./types";
 import { Link, Avatar, icons } from "./display";
 import {
@@ -23,6 +24,73 @@ import {
 } from "lucide-react";
 
 type NavigationProps = { isGames: boolean; isGarden: boolean; isHome: boolean; isMuseum?: boolean };
+
+function useMobileMenuAnimation(open: boolean) {
+  const ref = useRef<HTMLElement>(null);
+  const interrupted = useRef<Keyframe | null>(null);
+
+  useLayoutEffect(() => {
+    const menu = ref.current;
+    if (!menu) return;
+    const mobile = window.matchMedia("(max-width: 760px)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animation: Animation | null = null;
+
+    const measure = (): Keyframe => {
+      const style = getComputedStyle(menu);
+      return {
+        height: `${menu.getBoundingClientRect().height}px`,
+        paddingTop: style.paddingTop,
+        paddingBottom: style.paddingBottom,
+        marginTop: style.marginTop,
+        opacity: style.opacity,
+      };
+    };
+    const settle = () => {
+      animation?.cancel();
+      animation = null;
+      interrupted.current = null;
+      menu.classList.toggle("mobile-open", open);
+      menu.style.removeProperty("overflow");
+      menu.inert = mobile.matches && !open;
+    };
+    const start = interrupted.current;
+    interrupted.current = null;
+    menu.inert = mobile.matches && !open;
+
+    if (!mobile.matches || reducedMotion.matches ||
+        (!open && !menu.classList.contains("mobile-open") && !start)) {
+      settle();
+    } else {
+      // Keep the menu rendered until its closing animation has finished.
+      menu.classList.add("mobile-open");
+      const expanded = measure();
+      const collapsed: Keyframe = {
+        height: "0px", paddingTop: "0px", paddingBottom: "0px",
+        marginTop: "0px", opacity: 0,
+      };
+      menu.style.overflow = "hidden";
+      animation = menu.animate(
+        [start ?? (open ? collapsed : expanded), open ? expanded : collapsed],
+        { duration: 500, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "both" },
+      );
+      animation.onfinish = settle;
+    }
+
+    mobile.addEventListener("change", settle);
+    reducedMotion.addEventListener("change", settle);
+    return () => {
+      // A quick second click continues from the current frame without jumping.
+      if (animation) interrupted.current = measure();
+      animation?.cancel();
+      menu.style.removeProperty("overflow");
+      mobile.removeEventListener("change", settle);
+      reducedMotion.removeEventListener("change", settle);
+    };
+  }, [open]);
+
+  return ref;
+}
 
 export function Header({
   isGames,
@@ -170,10 +238,12 @@ export function Sidebar({
   categories: { data: Category[] | null };
   pathname: string;
 }) {
+  const menuRef = useMobileMenuAnimation(mobileMenu);
   return (
     <aside
+      ref={menuRef}
       id="community-sidebar"
-      className={"left-sidebar " + (mobileMenu ? "mobile-open" : "")}
+      className="left-sidebar"
       aria-label="社区导航"
     >
       <div className="sidebar-label">我的社区</div>

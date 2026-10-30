@@ -2,7 +2,7 @@
 @import "./games.css";
 @import "./garden.css";
 :root {
-  --bg: #f5f4f9;
+  --bg: #fff;
   --paper: #fff;
   --ink: #25253d;
   --text: #41435a;
