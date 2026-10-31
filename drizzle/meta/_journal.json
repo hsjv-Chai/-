@@ -43,6 +43,13 @@
       "when": 1793255496307,
       "tag": "0005_rainy_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793443229232,
+      "tag": "0006_cooperative_garden",
+      "breakpoints": true
     }
   ]
 }

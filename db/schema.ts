@@ -4,7 +4,11 @@ import {
   integer,
   primaryKey,
   index,
+  uniqueIndex,
+  foreignKey,
+  check,
 } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 export const users = sqliteTable(
   "users",
   {
@@ -222,6 +226,106 @@ export const gardenCheckIns = sqliteTable(
   (t) => [primaryKey({ columns: [t.userId, t.day] })],
 );
 
+export const coopGardens = sqliteTable(
+  "coop_gardens",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    intro: text("intro").notNull().default(""),
+    creatorId: text("creator_id")
+      .notNull()
+      .references(() => users.id),
+    ownerId: text("owner_id").references(() => users.id),
+    currentRound: integer("current_round").notNull().default(1),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+    lastWateredAt: integer("last_watered_at").notNull().default(0),
+  },
+  (t) => [index("coop_gardens_activity_idx").on(t.lastWateredAt, t.createdAt)],
+);
+
+export const coopMembers = sqliteTable(
+  "coop_members",
+  {
+    id: text("id").primaryKey(),
+    coopId: text("coop_id")
+      .notNull()
+      .references(() => coopGardens.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    joinedAt: integer("joined_at").notNull(),
+    leftAt: integer("left_at"),
+  },
+  (t) => [
+    uniqueIndex("coop_member_active_unique")
+      .on(t.coopId, t.userId)
+      .where(sql`${t.leftAt} IS NULL`),
+    index("coop_member_user_idx").on(t.userId, t.leftAt),
+  ],
+);
+
+export const coopRounds = sqliteTable(
+  "coop_rounds",
+  {
+    coopId: text("coop_id")
+      .notNull()
+      .references(() => coopGardens.id),
+    number: integer("number").notNull(),
+    growth: integer("growth").notNull().default(0),
+    startedAt: integer("started_at").notNull(),
+    maturedDay: text("matured_day"),
+    maturedAt: integer("matured_at"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.coopId, t.number] }),
+    check("coop_growth_bounds", sql`${t.growth} BETWEEN 0 AND 35`),
+  ],
+);
+
+export const coopWaters = sqliteTable(
+  "coop_waters",
+  {
+    id: text("id").primaryKey(),
+    coopId: text("coop_id").notNull(),
+    roundNumber: integer("round_number").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    day: text("day").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("coop_water_user_day_unique").on(t.userId, t.day),
+    index("coop_water_round_idx").on(t.coopId, t.roundNumber, t.createdAt),
+    foreignKey({
+      columns: [t.coopId, t.roundNumber],
+      foreignColumns: [coopRounds.coopId, coopRounds.number],
+    }),
+  ],
+);
+
+export const coopMemories = sqliteTable(
+  "coop_memories",
+  {
+    coopId: text("coop_id").notNull(),
+    roundNumber: integer("round_number").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    day: text("day").notNull(),
+    awardedAt: integer("awarded_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.coopId, t.roundNumber, t.userId] }),
+    index("coop_memory_user_idx").on(t.userId, t.awardedAt),
+    foreignKey({
+      columns: [t.coopId, t.roundNumber],
+      foreignColumns: [coopRounds.coopId, coopRounds.number],
+    }),
+  ],
+);
+
 export const museumExhibitions = sqliteTable("museum_exhibitions", {
   id: text("id").primaryKey(),
   draft: text("draft").notNull(),
@@ -233,29 +337,56 @@ export const museumExhibitions = sqliteTable("museum_exhibitions", {
   updatedAt: integer("updated_at").notNull(),
   publishedAt: integer("published_at"),
 });
-export const museumItems = sqliteTable("museum_items", {
-  id: text("id").primaryKey(),
-  exhibitionId: text("exhibition_id").notNull().references(() => museumExhibitions.id),
-  content: text("content").notNull(),
-  position: integer("position").notNull(),
-  removed: integer("removed").notNull().default(0),
-}, t => [index("museum_items_exhibition_idx").on(t.exhibitionId, t.removed, t.position)]);
+export const museumItems = sqliteTable(
+  "museum_items",
+  {
+    id: text("id").primaryKey(),
+    exhibitionId: text("exhibition_id")
+      .notNull()
+      .references(() => museumExhibitions.id),
+    content: text("content").notNull(),
+    position: integer("position").notNull(),
+    removed: integer("removed").notNull().default(0),
+  },
+  (t) => [
+    index("museum_items_exhibition_idx").on(
+      t.exhibitionId,
+      t.removed,
+      t.position,
+    ),
+  ],
+);
 export const museumReleases = sqliteTable("museum_releases", {
   id: text("id").primaryKey(),
-  exhibitionId: text("exhibition_id").notNull().references(() => museumExhibitions.id),
+  exhibitionId: text("exhibition_id")
+    .notNull()
+    .references(() => museumExhibitions.id),
   content: text("content").notNull(),
   createdAt: integer("created_at").notNull(),
 });
-export const museumReleaseItems = sqliteTable("museum_release_items", {
-  releaseId: text("release_id").notNull().references(() => museumReleases.id),
-  itemId: text("item_id").notNull(),
-  position: integer("position").notNull(),
-  content: text("content").notNull(),
-}, t => [primaryKey({columns:[t.releaseId,t.itemId]}), index("museum_release_item_idx").on(t.itemId)]);
+export const museumReleaseItems = sqliteTable(
+  "museum_release_items",
+  {
+    releaseId: text("release_id")
+      .notNull()
+      .references(() => museumReleases.id),
+    itemId: text("item_id").notNull(),
+    position: integer("position").notNull(),
+    content: text("content").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.releaseId, t.itemId] }),
+    index("museum_release_item_idx").on(t.itemId),
+  ],
+);
 export const museumImages = sqliteTable("museum_images", {
   id: text("id").primaryKey(),
-  exhibitionId: text("exhibition_id").notNull().references(() => museumExhibitions.id),
+  exhibitionId: text("exhibition_id")
+    .notNull()
+    .references(() => museumExhibitions.id),
   mime: text("mime").notNull(),
-  createdBy: text("created_by").notNull().references(() => users.id),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
   createdAt: integer("created_at").notNull(),
 });

@@ -1,5 +1,7 @@
 # 测试导航
 
+合种新增 `test:cooperative`（真实 SQLite 多连接竞争与旧库兼容）、`test:cooperative-api`（隔离 HTTP 及实际重启后验证）、`test:cooperative-d1`（强制 Wrangler `--local` 的独立 D1 模拟目录）。见 [合种说明](../docs/features/cooperative-garden.md) 和 [验证结果](../docs/verification/cooperative-garden.md)。
+
 | 目录/命令 | 目的 |
 | --- | --- |
 | `unit/` · `test:games` / `test:garden` | 不启动服务的牌局与日期/成长规则 |

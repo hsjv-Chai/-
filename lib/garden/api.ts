@@ -1,6 +1,8 @@
 import { all, body, fail, json, now, requireUser, run } from '../server';
 import { gardenDate, gardenState, type CheckIn } from './model';
+import { cooperativeAPI } from './cooperative-api';
 export async function gardenAPI(req: Request, segments: string[]) {
+  if (segments[0] === 'coops') return cooperativeAPI(req, segments.slice(1));
   const isRead = req.method === 'GET' && segments.length === 0;
   const isWrite = req.method === 'POST' && segments.length === 1 && segments[0] === 'check-in';
   if (!isRead && !isWrite) fail('种瓜接口不存在', 404);

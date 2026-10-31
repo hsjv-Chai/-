@@ -17,6 +17,7 @@
 
 管理员账号查看、封禁与解封，以及同 IP 集中注册标记，见 [账号管理说明](docs/features/account-management.md)。
 新注册需要邮箱验证码，每个规范化邮箱累计最多十个账号；历史账号继续正常登录。见 [邮箱注册说明](docs/features/email-registration.md)。
+种瓜包含独立的个人签到和 [社区合种瓜田](docs/features/cooperative-garden.md)：每块最多十人，每人每天选择一块浇水，累计三十五次共同收获。
 
 - [架构与目录分工](docs/architecture.md)：从页面到 API、数据库的调用关系及两套运行环境。
 - [开发与验证指南](docs/development.md)：本地启动、隔离测试、构建及贡献约定。

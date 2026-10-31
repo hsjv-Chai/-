@@ -1,6 +1,8 @@
 "use client";
 
 import Garden from "../garden";
+import { CooperativeGarden } from "../garden/cooperative";
+import { GardenNavigation } from "../garden/navigation";
 import CardRoom from "../card-room";
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { Loading, Empty, Link } from "./display";
@@ -77,7 +79,7 @@ function App() {
   const category = params.get("category") || "",
     view = params.get("view") || "latest",
     isHome = pathname === "/",
-    isGarden = pathname === "/garden" || pathname === "/garden/",
+    isGarden = pathname === "/garden" || pathname.startsWith("/garden/"),
     isMuseum = pathname === "/museum" || pathname.startsWith("/museum/") || pathname === "/admin/museum" || pathname.startsWith("/admin/museum/"),
     isGames = pathname === "/games" || pathname.startsWith("/games/"),
     selectedCategory = categories.data?.find((c) => c.id === category);
@@ -134,12 +136,18 @@ function App() {
             slug[0] === "admin" ? slug.length === 2 ? <MuseumAdminList user={user} ready={authReady} /> : slug.length === 3 ? <MuseumEditor key={slug[2]} id={slug[2]} user={user} ready={authReady} /> : <Empty title="此管理页面不存在" />
               : <MuseumView key={pathname + params.toString()} path={slug.slice(1)} params={params.toString()} user={user} ready={authReady} />
           ) : isGarden ? (
-            <Garden
+            <div className="garden-module">
+            <GardenNavigation cooperative={slug[1] === "coops"}/>
+            {slug.length === 1 ? <Garden
               key={user?.id ?? "guest"}
               user={user}
               ready={authReady}
               login={askLogin}
-            />
+            /> : slug[1] === "coops" && slug.length <= 3 ? <CooperativeGarden
+              key={(user?.id ?? "guest")+pathname+params.toString()}
+              coopId={slug[2]} params={params.toString()} user={user} ready={authReady} login={askLogin}
+            /> : <Empty title="这片瓜田还不存在"/>}
+            </div>
           ) : isGames ? (
             <CardRoom
               key={pathname}

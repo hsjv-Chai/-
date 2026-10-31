@@ -1,0 +1,874 @@
+.garden-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e1e9e2;
+  margin-bottom: 28px;
+  overflow-x: auto;
+}
+.garden-tabs a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 18px;
+  color: #617366;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+.garden-tabs a[aria-current="page"] {
+  color: #236b46;
+  border-bottom-color: #236b46;
+  font-weight: 600;
+}
+.garden-home .garden-coop-entry {
+  font-size: 12px;
+  color: #236b46;
+  margin-top: 6px;
+  min-height: 28px;
+}
+.coop-page {
+  --coop-green: #236b46;
+  --coop-muted: #596e60;
+  --coop-line: #e1e9e2;
+  color: #24352c;
+  font-size: 15px;
+  min-width: 0;
+}
+.coop-page h1,
+.coop-page h2,
+.coop-page h3,
+.coop-page p {
+  overflow-wrap: anywhere;
+}
+.coop-heading {
+  padding: 4px 0 26px;
+}
+.coop-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--coop-green);
+  margin-bottom: 14px;
+}
+.coop-heading h1 {
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.25;
+  margin: 0 0 12px;
+}
+.coop-heading > p {
+  color: var(--coop-muted);
+  font-size: 15px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+.coop-page .button {
+  background: var(--coop-green);
+  border-radius: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  padding: 10px 16px;
+  gap: 7px;
+}
+.coop-page .button.secondary {
+  background: white;
+  color: var(--coop-green);
+  border: 1px solid #bfcec2;
+}
+.coop-page .button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.coop-page .text-link {
+  color: var(--coop-green);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.coop-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  color: var(--coop-muted);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.coop-section {
+  margin: 0 0 30px;
+  background: #fff;
+  border: 1px solid var(--coop-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.coop-signin {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 22px;
+  background: #f3f8f1;
+  border: 1px solid #dce7d8;
+  border-radius: 12px;
+  margin-bottom: 26px;
+}
+.coop-signin > svg {
+  flex-shrink: 0;
+  color: var(--coop-green);
+}
+.coop-signin > div {
+  flex: 1;
+  min-width: 0;
+}
+.coop-signin h2 {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.coop-signin p {
+  font-size: 13px;
+  color: var(--coop-muted);
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.coop-signin .button {
+  flex-shrink: 0;
+}
+.coop-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--coop-line);
+}
+.coop-section-heading h2 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+.coop-section-heading p {
+  font-size: 13px;
+  color: var(--coop-muted);
+  margin-top: 6px;
+  line-height: 1.7;
+}
+.coop-section-heading > span {
+  font-size: 12px;
+  color: var(--coop-muted);
+  flex-shrink: 0;
+}
+.coop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+.coop-mine .coop-grid {
+  background: #f7faf7;
+}
+.coop-card {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--coop-line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.coop-card:hover {
+  border-color: #9bb7a3;
+  box-shadow: 0 4px 15px #234b3210;
+}
+.coop-card-art {
+  background: #f3f7ee;
+  position: relative;
+  padding: 8px 0;
+}
+.coop-card-art > .garden-plant {
+  height: 140px;
+  width: 100%;
+  margin: auto;
+  display: block;
+}
+.coop-card-art > span {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  font-size: 12px;
+  background: #fffffff0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: #456442;
+}
+.coop-card-copy {
+  padding: 18px;
+}
+.coop-card h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.coop-card h3 svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.coop-card p {
+  font-size: 13px;
+  color: var(--coop-muted);
+  line-height: 1.75;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 46px;
+  margin-bottom: 16px;
+}
+.coop-progress-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.coop-progress-caption strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.coop-progress-caption strong > span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--coop-muted);
+}
+.coop-progress-caption > span {
+  color: var(--coop-muted);
+  font-size: 12px;
+}
+.coop-progress progress {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #e6ede5;
+  accent-color: var(--coop-green);
+}
+.coop-progress progress::-webkit-progress-bar {
+  background: #e6ede5;
+}
+.coop-progress progress::-webkit-progress-value {
+  background: var(--coop-green);
+  border-radius: 9px;
+}
+.coop-progress progress::-moz-progress-bar {
+  background: var(--coop-green);
+  border-radius: 9px;
+}
+.coop-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+  font-size: 12px;
+  color: var(--coop-muted);
+}
+.coop-card-meta > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.coop-daily {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--coop-green);
+  line-height: 1.7;
+}
+.coop-daily a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.coop-empty {
+  text-align: center;
+  padding: 32px 22px;
+  color: var(--coop-muted);
+  line-height: 1.8;
+}
+.coop-empty > svg {
+  margin: 0 auto 12px;
+  color: #6e8b66;
+}
+.coop-empty > span {
+  font-size: 30px;
+  display: block;
+  margin-bottom: 8px;
+}
+.coop-empty h3 {
+  font-size: 16px;
+  color: #334c3b;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.coop-empty p {
+  font-size: 13px;
+}
+.coop-muted {
+  padding: 22px;
+  color: var(--coop-muted);
+  line-height: 1.8;
+  font-size: 14px;
+}
+.coop-form {
+  padding: 24px;
+  margin: 0 0 28px;
+  border: 1px solid #bfcec2;
+  border-radius: 12px;
+  background: #fff;
+}
+.coop-form h2 {
+  font-size: 20px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.coop-form label {
+  display: block;
+  color: #3d5545;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.coop-form label > span {
+  font-size: 12px;
+  color: var(--coop-muted);
+}
+.coop-form input,
+.coop-form textarea,
+.coop-search input {
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
+  border: 1px solid #bdcbbd;
+  border-radius: 8px;
+  background: white;
+  color: #24352c;
+  padding: 12px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.coop-form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+.coop-form > p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--coop-muted);
+  margin-bottom: 18px;
+}
+.coop-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.coop-actions .button {
+  max-width: 100%;
+}
+.coop-search {
+  padding: 20px 22px;
+}
+.coop-search label {
+  font-size: 13px;
+  color: var(--coop-muted);
+}
+.coop-search > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.coop-search input {
+  margin: 0;
+  flex: 1;
+}
+.coop-search .button {
+  flex-shrink: 0;
+}
+.coop-search a {
+  font-size: 13px;
+  color: var(--coop-muted);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.coop-error,
+.coop-notice {
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.coop-error {
+  background: #fff1ed;
+  color: #943d32;
+}
+.coop-error button {
+  margin-left: 10px;
+}
+.coop-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8f3ec;
+  color: var(--coop-green);
+}
+.coop-notice svg {
+  flex-shrink: 0;
+}
+.coop-skeleton {
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+  min-height: 220px;
+}
+.coop-skeleton > span {
+  display: block;
+  height: 42px;
+  border-radius: 8px;
+  background: #eef3ee;
+  animation: coop-pulse 1.5s ease-in-out infinite;
+}
+.coop-skeleton > span:nth-child(2) {
+  width: 80%;
+}
+.coop-skeleton > span:nth-child(3) {
+  width: 60%;
+}
+.coop-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 18px;
+  border-top: 1px solid var(--coop-line);
+  font-size: 13px;
+}
+.coop-pagination a,
+.coop-pagination button,
+.coop-pagination > span[aria-disabled] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  min-height: 44px;
+  border: 1px solid #c5d3c8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--coop-green);
+}
+.coop-pagination [aria-disabled="true"],
+.coop-pagination button:disabled {
+  opacity: 0.45;
+}
+.coop-grow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  background: #f2f7ed;
+  border-radius: 12px;
+  border: 1px solid #dce7d8;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.coop-grow-copy {
+  padding: 30px;
+  min-width: 0;
+}
+.coop-round {
+  font-size: 13px;
+  color: var(--coop-green);
+}
+.coop-grow h2 {
+  font-size: 25px;
+  line-height: 1.5;
+  margin: 16px 0 10px;
+  font-weight: 600;
+}
+.coop-grow-copy > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--coop-muted);
+  margin-bottom: 20px;
+}
+.coop-grow .coop-progress {
+  margin: 24px 0;
+}
+.coop-grow-copy > small {
+  font-size: 12px;
+  color: var(--coop-muted);
+  display: block;
+  margin-top: 16px;
+  line-height: 1.8;
+}
+.coop-grow .coop-daily {
+  padding: 12px 0 0;
+  margin-bottom: 0;
+}
+.coop-art {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 16px 24px;
+  min-width: 0;
+}
+.coop-art .garden-plant {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+}
+.coop-art > span {
+  text-align: center;
+  font-size: 13px;
+  color: #54714e;
+}
+.coop-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+  font-size: 13px;
+  color: var(--coop-muted);
+}
+.coop-toolbar > span,
+.coop-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.coop-members,
+.coop-records,
+.coop-activity {
+  list-style: none;
+  padding: 0 22px;
+  margin: 0;
+}
+.coop-members li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  min-width: 0;
+}
+.coop-members li + li,
+.coop-records li + li,
+.coop-activity li + li {
+  border-top: 1px solid var(--coop-line);
+}
+.coop-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e8f3ec;
+  color: var(--coop-green);
+  font-size: 18px;
+}
+.coop-members li > div {
+  min-width: 0;
+  flex: 1;
+}
+.coop-members li > div > a {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.coop-members p {
+  font-size: 12px;
+  color: var(--coop-muted);
+  margin-top: 5px;
+}
+.coop-members strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.coop-members strong > span {
+  font-size: 12px;
+  color: var(--coop-muted);
+  font-weight: 400;
+}
+.coop-history-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.coop-history-grid .coop-section-heading {
+  align-items: start;
+  flex-wrap: wrap;
+}
+.coop-history-grid h2 {
+  font-size: 17px;
+}
+.coop-activity li {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  padding: 15px 0;
+  font-size: 13px;
+}
+.coop-activity li > svg {
+  color: var(--coop-green);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.coop-activity li > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+.coop-activity li > div > span,
+.coop-activity small {
+  color: var(--coop-muted);
+}
+.coop-activity small {
+  display: block;
+  font-size: 12px;
+  margin-top: 3px;
+}
+.coop-activity b {
+  font-size: 13px;
+  color: var(--coop-green);
+  margin-left: auto;
+  font-weight: 500;
+}
+.coop-records li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 0;
+}
+.coop-record-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.coop-records li > div {
+  min-width: 0;
+  flex: 1;
+}
+.coop-records a,
+.coop-records strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+.coop-records p,
+.coop-records time {
+  font-size: 12px;
+  color: var(--coop-muted);
+  line-height: 1.8;
+}
+.coop-records p {
+  margin-top: 5px;
+}
+.coop-records > li > time {
+  flex-shrink: 0;
+}
+.coop-share-fallback {
+  padding: 16px;
+  border: 1px solid var(--coop-line);
+  border-radius: 8px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.coop-share-fallback a {
+  display: block;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  color: var(--coop-green);
+}
+.coop-footnote {
+  text-align: center;
+  color: var(--coop-muted);
+  font-size: 12px;
+  line-height: 1.9;
+  margin-top: 26px;
+  padding-bottom: 16px;
+}
+.coop-leave-confirmation {
+  padding: 20px;
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid #bfcec2;
+  border-radius: 12px;
+}
+.coop-leave-confirmation h2 {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.coop-leave-confirmation p {
+  font-size: 14px;
+  color: var(--coop-muted);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+.coop-form > p.coop-form-error {
+  padding: 12px;
+  background: #fff1ed;
+  color: #943d32;
+  border-radius: 8px;
+}
+.coop-page a:focus-visible,
+.coop-page button:focus-visible,
+.coop-page input:focus-visible,
+.coop-page textarea:focus-visible,
+.garden-tabs a:focus-visible {
+  outline: 3px solid #478760;
+  outline-offset: 3px;
+}
+@keyframes coop-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (max-width: 1199px) {
+  .coop-history-grid {
+    grid-template-columns: 1fr;
+  }
+  .coop-grow {
+    grid-template-columns: 1fr;
+  }
+  .coop-art {
+    grid-row: auto;
+    padding: 8px 30px 12px;
+  }
+  .coop-art .garden-plant {
+    max-height: 210px;
+  }
+  .coop-grow-copy {
+    padding: 24px;
+  }
+  .coop-grow h2 {
+    font-size: 23px;
+  }
+}
+@media (max-width: 600px) {
+  .coop-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .coop-section-heading {
+    padding: 18px 16px;
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .coop-section-heading h2 {
+    font-size: 17px;
+  }
+  .coop-section-heading p {
+    font-size: 12px;
+  }
+  .coop-heading h1 {
+    font-size: 32px;
+  }
+  .coop-heading > p {
+    font-size: 14px;
+  }
+  .coop-form {
+    padding: 20px 16px;
+  }
+  .coop-grow-copy {
+    padding: 20px;
+  }
+  .coop-grow .coop-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .coop-grow .coop-actions .button {
+    justify-content: center;
+    width: 100%;
+  }
+  .coop-search {
+    padding: 16px;
+  }
+  .coop-search > div {
+    flex-wrap: wrap;
+  }
+  .coop-search input {
+    flex-basis: 100%;
+  }
+  .coop-members,
+  .coop-records,
+  .coop-activity {
+    padding-inline: 16px;
+  }
+  .coop-records > li {
+    flex-wrap: wrap;
+  }
+  .coop-records > li > time {
+    margin-left: 40px;
+    flex-basis: 100%;
+  }
+  .coop-toolbar > div {
+    width: 100%;
+  }
+  .garden-tabs a {
+    flex: 1;
+    padding-inline: 12px;
+  }
+  .coop-card-art > .garden-plant {
+    height: 150px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coop-skeleton > span {
+    animation: none;
+  }
+  .coop-card {
+    transition: none;
+  }
+}
+@media (max-width: 600px) {
+  .coop-signin {
+    padding: 18px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .coop-signin h2 {
+    font-size: 16px;
+  }
+  .coop-signin .button {
+    margin-left: 36px;
+  }
+  .coop-signin > div {
+    flex-basis: calc(100% - 44px);
+  }
+}
